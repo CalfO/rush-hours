@@ -28,7 +28,7 @@ Authentification par **Passkeys (WebAuthn/FIDO2)**, avec deux comptes préexista
 |---|---|
 | Validation (front + back) | **Zod** |
 | Styling / design system | **Tailwind CSS uniquement**, Material Design en variante **flat** |
-| Composants UI React | **PrimeReact** (https://primereact.dev/), en mode **unstyled** (voir design system ci-dessous) |
+| Composants UI React | **PrimeReact v11** (https://primereact.dev/), couche **Primitive** uniquement — aucune autre librairie de composants/graphiques (voir design system ci-dessous et `.claude/skills/primereact`) |
 | i18n | **react-i18next**, sélecteur de langue en liste déroulante dans le header, à gauche du menu avatar |
 | Lint / format | **ESLint + Prettier**, config Prettier par défaut intégrée à ESLint, exécutée aussi lors du `build` |
 | Logs (api) | **Winston ou Pino** |
@@ -41,19 +41,20 @@ Authentification par **Passkeys (WebAuthn/FIDO2)**, avec deux comptes préexista
 - **Validation Zod côté Nest** : `nestjs-zod` pour générer les pipes de validation et DTOs à partir de schémas Zod partagés/dupliqués entre front et back.
 - **Formulaires front** : `react-hook-form` + `@hookform/resolvers/zod` (pairing standard avec Zod, évite d'écrire la validation à la main).
 - **Routing front** : `react-router` (v6+), nécessaire pour distinguer les vues Connexion / Onboarding / Saisie / Analyses.
-- **Graphiques** : composant `Chart` de PrimeReact (wrapper Chart.js) pour la vue Analyses — reste dans l'écosystème PrimeReact déjà imposé, pas de dépendance supplémentaire à justifier.
+- **Graphiques** : **pas de librairie externe.** Le composant `Chart` de PrimeReact n'existe plus dans la version gratuite de PrimeReact v11 (passé dans l'offre commerciale PrimeUI Pro — voir `.claude/skills/primereact`). Contrainte du projet : rester uniquement sur PrimeReact, donc pas de `chart.js`/`react-chartjs-2` en dépendance supplémentaire. Les graphiques de la vue Analyses (§7.3) sont construits à la main en SVG/Tailwind (barres, ligne de tendance), éventuellement complétés par les primitives PrimeReact encore gratuites qui s'y prêtent (`MeterGroup`, `ProgressBar`, `Knob`) pour des indicateurs ponctuels.
 - **Session applicative** : après succès de la cérémonie WebAuthn, l'API émet un **JWT signé stocké dans un cookie httpOnly, `SameSite=Lax`** (via `@nestjs/jwt`). Pas de store de session externe (Redis) : inutile pour ce POC. Un `AuthGuard` Nest lit ce cookie sur les routes protégées.
 
 Ne pas introduire d'autres dépendances structurantes (state manager global, ORM alternatif, etc.) sans que ce soit strictement nécessaire.
 
 ### 2.1 Design system : Material flat, Tailwind seul
 
-Contrainte explicite : **aucun thème CSS PrimeReact** (pas de `primereact/resources/themes/*`, pas de PrimeFlex). PrimeReact reste utilisé pour la **logique/comportement** des composants complexes (calendrier d'heure, dropdown, chart, overlay/modal), mais son rendu visuel est entièrement repris en main via Tailwind :
+Contrainte explicite : **aucun thème CSS PrimeReact** (pas de preset Aura/Material/Lara/Nora, pas de package `primereact` classique). PrimeReact v11 se décline en plusieurs couches (Headless / Primitive / Tailwind / Styled, voir `.claude/skills/primereact` §1) — ce projet utilise exclusivement la couche **Primitive** :
 
-- Activer le mode **unstyled** de PrimeReact globalement (`PrimeReactProvider value={{ unstyled: true }}` dans `apps/web/src/main.jsx`/racine de l'app), puis styliser chaque composant utilisé via les props `pt` (passthrough) avec des classes Tailwind, ou via des wrappers maison dans `src/components/ui/`.
+- Composants ajoutés via `npx shadcn@latest add https://primereact.dev/r/<component>.json`, qui copie le code source localement dans `apps/web/src/components/ui/` (comportement/accessibilité PrimeReact inclus, zéro style imposé). Convertir immédiatement le fichier généré en `.jsx` sans annotations de type (le générateur produit du `.tsx` par défaut ; ce dépôt est JS/JSX uniquement, voir `CLAUDE.md`).
+- Styliser directement ces fichiers copiés avec des classes Tailwind — pas de props `pt`/passthrough ni de `PrimeReactProvider` en mode `unstyled` à configurer, puisqu'il n'y a plus de thème runtime à désactiver : le fichier local est déjà 100 % vierge de style.
 - Définir dans `tailwind.config.js` une palette inspirée Material (tokens `primary`, `secondary`, `surface`, `success`, `error`, `warning`) avec un seul jeu de nuances par rôle — pas de dégradés, pas d'ombres portées (`shadow-*` proscrit au profit de bordures fines `border-slate-200`/`border-slate-700` pour délimiter les surfaces). Coins légèrement arrondis (`rounded-md`) mais jamais de `rounded-full` hors avatar/icônes.
 - États interactifs (hover/focus/active/disabled) gérés uniquement par variation de teinte Tailwind (`hover:bg-primary-600`, `focus-visible:ring-2`), jamais par élévation/ombre.
-- Un seul composant `src/components/ui/Modal.jsx` (basé sur le `Dialog` PrimeReact en unstyled) sert de socle à toutes les modales de l'application (Paramètres, Semaine de travail, etc.) pour garantir une apparence cohérente.
+- Un seul composant `src/components/ui/Modal.jsx` (basé sur le `Dialog` Primitive copié localement, compound API `Dialog.Root`/`Dialog.Trigger`/`Dialog.Content`) sert de socle à toutes les modales de l'application (Paramètres, Semaine de travail, etc.) pour garantir une apparence cohérente.
 
 ---
 
@@ -241,12 +242,12 @@ Composant modal autonome (`src/components/WorkScheduleModal.jsx` ou équivalent)
 - Menu avatar du header → "Ma semaine de travail" (§7.1), à tout moment après l'onboarding, pour modifier la configuration
 
 Contenu du formulaire :
-- **Heures contractuelles hebdomadaires** : champ numérique libre + raccourcis `SelectButton` 35 / 37 / 40 (comme précédemment prévu dans l'onboarding, déplacé ici puisque indissociable de la répartition).
+- **Heures contractuelles hebdomadaires** : champ numérique libre + raccourcis `ToggleButtonGroup` (nom v11 de l'ancien `SelectButton`) 35 / 37 / 40 (comme précédemment prévu dans l'onboarding, déplacé ici puisque indissociable de la répartition).
 - **Jours travaillés** : 7 cases à cocher (Lundi → Dimanche, libellés traduits i18n), ordre d'affichage à partir de `weekStartDay` courant si déjà défini, sinon ordre Lundi→Dimanche par défaut.
 - **Répartition des heures par jour coché** : un champ "heures" par jour travaillé (ex. `InputNumber` PrimeReact), avec un **indicateur en temps réel de l'écart entre la somme saisie et le total hebdomadaire** (`Δ = weeklyContractHours*60 - Σ targetMinutes`), affiché en vert si `Δ = 0`, en rouge sinon. **Le bouton Enregistrer est désactivé tant que `Δ ≠ 0`.**
   - Valeur par défaut proposée à l'ouverture initiale (aucune config existante) : répartition égale de `weeklyContractHours` sur les jours cochés (Lundi–Vendredi cochés par défaut).
   - Décocher un jour retire sa ligne de saisie et redistribue implicitement rien (l'utilisateur doit ajuster manuellement les autres jours pour que `Δ` revienne à 0 — pas de redistribution automatique, pour rester prévisible).
-- **Jour de début de semaine** : `Dropdown` PrimeReact (les 7 jours), détermine `user.weekStartDay`. Doit être parmi les jours cochés comme travaillés n'est **pas** une contrainte obligatoire (l'utilisateur peut démarrer sa semaine un jour non travaillé, ex. semaine du dimanche au samedi avec dimanche non travaillé).
+- **Jour de début de semaine** : `Select` PrimeReact (nom v11 de l'ancien `Dropdown`, les 7 jours), détermine `user.weekStartDay`. Doit être parmi les jours cochés comme travaillés n'est **pas** une contrainte obligatoire (l'utilisateur peut démarrer sa semaine un jour non travaillé, ex. semaine du dimanche au samedi avec dimanche non travaillé).
 
 Soumission → `PUT /users/me/work-schedule` (§6). Validation Zod stricte côté front ET back (au moins 1 jour coché, `targetMinutes > 0` par jour coché, somme exacte).
 
@@ -284,8 +285,8 @@ Toutes les routes sauf `/login` sont protégées (redirection vers `/login` si `
 
 De gauche à droite :
 1. Logo / titre "RushHours"
-2. Navigation (PrimeReact `TabMenu` ou `Menubar`) : "Saisie" / "Analyses"
-3. (droite) Sélecteur de langue — `Dropdown` PrimeReact, liste des langues i18next configurées (FR/EN minimum)
+2. Navigation (PrimeReact `Tabs` — `TabMenu`/`Menubar` n'existent plus en v11, routage géré via `react-router`) : "Saisie" / "Analyses"
+3. (droite) Sélecteur de langue — `Select` PrimeReact (nom v11 de l'ancien `Dropdown`), liste des langues i18next configurées (FR/EN minimum)
 4. Bouton avatar utilisateur → ouvre un menu :
    - "Mon profil" → modal formulaire nom/prénom/email (§5.4 étape 1)
    - "Ma semaine de travail" → réutilise la modal indépendante du §5.5 (jours travaillés, répartition, jour de début de semaine)
@@ -293,7 +294,7 @@ De gauche à droite :
 
 ### 7.2 Vue Saisie (`/`)
 
-- **Formulaire du jour** : sélecteur de date (par défaut aujourd'hui), champs heure d'arrivée, heure de départ, début pause déjeuner, fin pause déjeuner (bornées 12h–14h dans le composant), bouton Enregistrer. Utiliser les `Calendar`/`InputMask` de PrimeReact en mode heure.
+- **Formulaire du jour** : sélecteur de date (par défaut aujourd'hui), champs heure d'arrivée, heure de départ, début pause déjeuner, fin pause déjeuner (bornées 12h–14h dans le composant), bouton Enregistrer. Utiliser `DatePicker` PrimeReact (nom v11 de l'ancien `Calendar`) avec `timeOnly` pour les champs heure.
 - **Indicateur du jour** : une fois la saisie faite pour le jour sélectionné, afficher une jauge/barre (composant simple Tailwind ou `Knob`/`ProgressBar` PrimeReact) montrant l'écart vs cible journalière, colorée vert/rouge, avec le libellé `+1h30` / `-0h45`.
 - **Indicateur de la semaine** : même principe, agrégé sur la semaine ISO courante (utilise `GET /time-entries/summary`).
 - **Calendrier du mois** : grille mensuelle custom Tailwind (7 colonnes, la première colonne correspondant à `user.weekStartDay`, pas nécessairement Lundi) où chaque cellule-jour est colorée selon `balanceMinutes` du jour (dégradé vert/rouge, neutre si jour non travaillé ou sans saisie), avec le cumul du mois affiché en en-tête de la grille. Navigation mois précédent/suivant.
@@ -306,7 +307,7 @@ Au moins :
 - Graphique en barres : totaux hebdomadaires sur les dernières N semaines.
 - Sélecteur de plage de dates (mois courant par défaut) réutilisant `GET /time-entries/analytics`.
 
-Utiliser le composant `Chart` PrimeReact (Chart.js).
+**Pas de `Chart` PrimeReact** (retiré de la version gratuite en v11, voir §2). Construire ces trois graphiques comme des composants SVG/Tailwind faits maison dans `src/components/charts/` (ex. `BarChart.jsx`, `TrendLine.jsx`) — barres = `<rect>` proportionnels aux valeurs, ligne = `<polyline>`/`<path>` avec une ligne de référence à `y=0`. Rester volontairement simple (pas de zoom, tooltip riche, ou animation avancée) : le besoin est de représenter des séries courtes (jours d'un mois, N semaines), pas un tableau de bord général. `ProgressBar`/`Knob`/`MeterGroup` PrimeReact (couche Primitive) restent une option pour un indicateur ponctuel isolé, mais pas pour ces trois graphiques multi-points.
 
 ---
 
@@ -347,12 +348,12 @@ Utiliser le composant `Chart` PrimeReact (Chart.js).
 3. **API — module Auth** : endpoints WebAuthn (§5.2), guard de session basé sur le cookie JWT.
 4. **API — module Users** : `PATCH /users/me`, `GET`/`PUT /users/me/work-schedule` (avec validation Zod de la somme des minutes, §5.5).
 5. **API — module TimeEntries** : CRUD + `summary` + `analytics`, module de calcul partagé (§4) prenant en compte `WorkingDaySchedule`/`weekStartDay`, avec tests unitaires Jest sur les règles de calcul (cas limites : jour non travaillé, pas de saisie, pause en dehors de 12h–14h, semaine à cheval sur deux mois, `weekStartDay` différent de lundi).
-6. **Front — fondations** : Tailwind (tokens Material flat, §2.1), PrimeReact en mode unstyled, react-router, react-i18next, structure de dossiers (`src/pages`, `src/components`, `src/components/ui`, `src/api`, `src/i18n`).
+6. **Front — fondations** : Tailwind (tokens Material flat, §2.1), mise en place du générateur PrimeReact Primitive (`components.json` shadcn, voir `.claude/skills/primereact`), react-router, react-i18next, structure de dossiers (`src/pages`, `src/components`, `src/components/ui`, `src/components/charts`, `src/api`, `src/i18n`).
 7. **Front — Auth** : écran login passkey, garde de route, appel `/auth/me` au démarrage (contexte React `AuthProvider`).
 8. **Front — modal "Ma semaine de travail"** (§5.5), composant indépendant réutilisé ensuite à deux endroits.
 9. **Front — Onboarding** (2 étapes, §5.4) + **modal "Mon profil"** des Paramètres.
 10. **Front — Header** sticky (nav, sélecteur de langue, avatar avec les deux entrées Profil / Semaine de travail).
 11. **Front — Vue Saisie** : formulaire du jour, indicateurs jour/semaine, calendrier mensuel coloré (grille alignée sur `weekStartDay`).
-12. **Front — Vue Analyses** : graphiques PrimeReact Chart.
+12. **Front — Vue Analyses** : graphiques SVG/Tailwind faits maison (§7.3, pas de dépendance de charting externe).
 13. **Qualité** : configs ESLint/Prettier des deux workspaces + hooks `prebuild`, `npm run lint` et `npm run build` passants à la racine, tests existants (`npm run test`) toujours verts.
 14. Vérification manuelle bout en bout dans le navigateur (enrôlement passkey, onboarding en 2 étapes, modification de la semaine de travail depuis les Paramètres, saisie d'une semaine complète avec un `weekStartDay` non standard, cohérence des couleurs jour/semaine/mois, vue Analyses, rendu Material flat).
