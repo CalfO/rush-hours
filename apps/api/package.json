@@ -21,7 +21,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "docker:up": "docker compose -f ../../docker-compose.yml up -d",
+    "docker:up": "(docker info >/dev/null 2>&1 && docker compose -f ../../docker-compose.yml up -d) || echo 'Docker unavailable, assuming Postgres is already running locally.'",
     "db:wait": "wait-on tcp:localhost:5432",
     "db:setup": "npm run docker:up && npm run db:wait && prisma migrate deploy && prisma db seed",
     "prestart": "npm run db:setup",
