@@ -1,70 +1,59 @@
-# GitHub Codespaces ♥️ React
+# ⏱️ RushHours
 
-Welcome to your shiny new Codespace running React! We've got everything fired up and running for you to explore React.
+POC personnel pour s'exercer à la stack **React / NestJS / Prisma**, développé et exécuté entièrement dans un **GitHub Codespace**, avec l'assistance de Claude Code.
 
-You've got a blank canvas to work on from a git perspective as well. There's a single initial commit with the what you're seeing right now - where you go from here is up to you!
+## 🎯 Objectif
 
-Everything you do here is contained within this one codespace. There is no repository on GitHub yet. If and when you’re ready you can click "Publish Branch" and we’ll create your repository and push up your project. If you were just exploring then and have no further need for this code then you can simply delete your codespace and it's gone forever.
+Deux objectifs en parallèle :
 
-This project was bootstrapped for you with [Vite](https://vitejs.dev/).
+1. **📚 Apprentissage** — découvrir et manipuler React (Vite), NestJS et Prisma dans un même projet, en environnement GitHub Codespaces, en s'appuyant sur un assistant IA pour la mise en place technique.
+2. **🧮 Fonctionnel** — construire un petit outil de suivi du temps de travail : un salarié saisit son heure d'arrivée et son heure de départ pour chaque jour travaillé de la semaine, et le nombre d'heures travaillées dans le mois est recalculé à la volée à partir de ces saisies.
 
-## Available Scripts
+## 🧱 Stack technique
 
-In the project directory, you can run:
+- ⚛️ **apps/web** — React 18 + Vite (JavaScript)
+- 🐈 **apps/api** — NestJS + Prisma (TypeScript)
+- 🐘 **PostgreSQL** — via Docker Compose
 
-### `npm start`
+## 📁 Structure du repo
 
-We've already run this for you in the `Codespaces: server` terminal window below. If you need to stop the server for any reason you can just run `npm start` again to bring it back online.
+```
+apps/
+  web/              # frontend React (Vite)
+  api/              # backend NestJS + Prisma
+docker-compose.yml  # service PostgreSQL
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000/](http://localhost:3000/) in the built-in Simple Browser (`Cmd/Ctrl + Shift + P > Simple Browser: Show`) to view your running application.
+## 🚀 Démarrage
 
-The page will reload automatically when you make changes.\
-You may also see any lint errors in the console.
+Prérequis : Node.js et Docker, tous deux déjà disponibles dans ce Codespace.
 
-### `npm test`
+```bash
+npm install
+npm run dev
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- 🌐 Frontend : port `3000`
+- 🔌 API : port `3001`
 
-### `npm run build`
+Au démarrage de l'API (`npm run dev`, `npm run dev:api`, ou `npm run start:dev --workspace api`), Docker Compose lance automatiquement le conteneur PostgreSQL, applique les migrations Prisma et exécute le seed de données — aucune étape manuelle n'est nécessaire.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 📜 Scripts principaux
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+npm run dev             # web + api en parallèle
+npm run dev:web          # frontend seul
+npm run dev:api           # backend seul (démarre aussi la base de données)
+npm run build              # build de tous les workspaces
+npm run test                 # tests de tous les workspaces
+npm run prisma:generate        # régénère le client Prisma
+npm run prisma:migrate           # crée/applique une migration Prisma
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## ⚠️ Particularité GitHub Codespaces
 
-## Learn More
+Le frontend et l'API tournent chacun sur un port forwardé par Codespaces (`*-3000.app.github.dev` et `*-3001.app.github.dev`). Un appel direct entre ces deux origines se heurte au proxy d'authentification de Codespaces (erreur CORS trompeuse). Pour l'éviter, le frontend appelle l'API via un chemin relatif (`/api/...`) que Vite proxifie en interne vers `http://localhost:3001` en développement — voir [CLAUDE.md](CLAUDE.md) pour le détail.
 
-You can learn more in the [Vite documentation](https://vitejs.dev/guide/).
+## 📌 Statut
 
-To learn Vitest, a Vite-native testing framework, go to [Vitest documentation](https://vitest.dev/guide/)
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://sambitsahoo.com/blog/vite-code-splitting-that-works.html](https://sambitsahoo.com/blog/vite-code-splitting-that-works.html)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://github.com/btd/rollup-plugin-visualizer#rollup-plugin-visualizer](https://github.com/btd/rollup-plugin-visualizer#rollup-plugin-visualizer)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://dev.to/hamdankhan364/simplifying-progressive-web-app-pwa-development-with-vite-a-beginners-guide-38cf](https://dev.to/hamdankhan364/simplifying-progressive-web-app-pwa-development-with-vite-a-beginners-guide-38cf)
-
-### Advanced Configuration
-
-This section has moved here: [https://vitejs.dev/guide/build.html#advanced-base-options](https://vitejs.dev/guide/build.html#advanced-base-options)
-
-### Deployment
-
-This section has moved here: [https://vitejs.dev/guide/build.html](https://vitejs.dev/guide/build.html)
-
-### Troubleshooting
-
-This section has moved here: [https://vitejs.dev/guide/troubleshooting.html](https://vitejs.dev/guide/troubleshooting.html)
+Le socle technique est en place (monorepo, connexion frontend ↔ backend, base de données PostgreSQL avec migrations et seed automatiques). La fonctionnalité de saisie des heures et de calcul mensuel reste à implémenter.

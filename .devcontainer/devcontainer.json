@@ -7,20 +7,24 @@
   "updateContentCommand": "npm install",
   "postCreateCommand": "",
   "postAttachCommand": {
-    "server": "npm start"
+    "server": "npm run dev"
   },
   "customizations": {
     "codespaces": {
       "openFiles": [
-        "src/App.jsx"
+        "apps/web/src/App.jsx"
       ]
     }
   },
   "portsAttributes": {
     "3000": {
-      "label": "Application",
+      "label": "Web",
       "onAutoForward": "openPreview"
+    },
+    "3001": {
+      "label": "API",
+      "onAutoForward": "notify"
     }
   },
-  "forwardPorts": [3000]
+  "forwardPorts": [3000, 3001]
 }
