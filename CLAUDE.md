@@ -58,3 +58,19 @@ Seeding logic lives in `apps/api/prisma/seed.ts` and is registered via the `pris
 
 ### Nest module shape
 Standard single-module Nest app so far: `AppModule` imports `PrismaModule` and declares `AppController`/`AppService`. As real RushHours features are added (time entries, employees, monthly totals), follow Nest convention and add feature modules under `apps/api/src/` rather than growing `AppModule`.
+
+## Agent team & workflow for feature development
+
+This repo has project skills (`.claude/skills/{nestjs,react,prisma}-best-practices`) and project subagents (`.claude/agents/{architect,senior-developer,dev-tester,reviewer}.md`) set up specifically for implementing RushHours features. Full rationale: `prompts/agent&skills/setup-nestjs-react-prisma-skills.md`.
+
+**You (the top-level session) are the orchestrator.** There is deliberately no separate "orchestrator" subagent — a subagent's output isn't shown directly to the user, so it can't serve as the main point of contact. You decide when to invoke the team below and relay context between them.
+
+**Don't invoke this pipeline for everything.** A question, a small bug fix, a config tweak, or exploratory work doesn't need it — handle those directly, the same way you would in any repo. Reserve the full sequence for a genuinely new feature or a significant change (e.g. implementing a section of `prompts/spec/rushhours-full-spec.md`).
+
+For a feature-sized change, the sequence is:
+
+1. **`architect`** (call synchronously — the next step depends on its answer): give it the feature request plus the relevant spec excerpt. It returns a structuring plan (which module/folder the new code belongs in) — it does not write code.
+2. **`senior-developer`**: give it the feature request plus the architect's plan. It implements, applying the best-practice skills. If it hits a point where the plan is ambiguous or wrong once in the actual code, it will say so instead of guessing — when that happens, call `architect` again with that specific question, then resume `senior-developer` with the answer. You are the relay between them; they don't talk to each other directly.
+3. **`dev-tester`**: once implementation is in place, give it the relevant spec excerpt (not just the code) plus the changed files. It writes tests derived from the spec's stated behavior (spec-as-test) — high-level/behavioral tests that would fail if the described behavior broke, not tests that just pin the current implementation. It doesn't touch production code.
+4. **`reviewer`**: give it the full diff (production code + tests). If it raises blocking findings, send them back to `senior-developer` (and/or `dev-tester` if the issue is about test quality/coverage) and re-review after the fix — repeat until clean or the user decides otherwise.
+5. Report back to the user: what changed, and how any reviewer findings were resolved.
