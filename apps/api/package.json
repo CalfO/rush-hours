@@ -23,7 +23,8 @@
     "prisma:studio": "prisma studio",
     "docker:up": "(docker info >/dev/null 2>&1 && docker compose -f ../../docker-compose.yml up -d) || echo 'Docker unavailable, assuming Postgres is already running locally.'",
     "db:wait": "wait-on tcp:localhost:5432",
-    "db:setup": "npm run docker:up && npm run db:wait && prisma migrate deploy && prisma db seed",
+    "free:port": "fuser -k 3001/tcp 2>/dev/null || true",
+    "db:setup": "npm run docker:up && npm run db:wait && prisma generate && prisma migrate deploy && prisma db seed && npm run free:port",
     "prestart": "npm run db:setup",
     "prestart:dev": "npm run db:setup"
   },
