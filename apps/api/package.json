@@ -25,13 +25,14 @@
     "db:wait": "wait-on tcp:localhost:5432",
     "free:port": "fuser -k 3001/tcp 2>/dev/null || true",
     "db:setup": "npm run docker:up && npm run db:wait && prisma generate && prisma migrate deploy && prisma db seed && npm run free:port",
-    "prestart": "npm run db:setup",
-    "prestart:dev": "npm run db:setup"
+    "prestart": "npm run build --workspace @rushhours/domain --prefix ../.. && npm run db:setup",
+    "prestart:dev": "npm run build --workspace @rushhours/domain --prefix ../.. && npm run db:setup"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
+    "@rushhours/domain": "*",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^12.0.0",
     "@nestjs/core": "^11.0.1",

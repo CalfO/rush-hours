@@ -7,9 +7,18 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { ConfigModule } from "./config/config.module";
 import { LoggerModule } from "./logger/logger.module";
 import { AuthModule } from "./auth/auth.module";
+import { UsersModule } from "./users/users.module";
+import { TimeEntriesModule } from "./time-entries/time-entries.module";
 
 @Module({
-  imports: [ConfigModule, LoggerModule, PrismaModule, AuthModule],
+  imports: [
+    ConfigModule,
+    LoggerModule,
+    PrismaModule,
+    AuthModule,
+    UsersModule,
+    TimeEntriesModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,

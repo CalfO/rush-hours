@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import './App.css';
+import { useState } from "react";
+import "./App.css";
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
 
 function App() {
-  const [message, setMessage] = useState(null);
-  const [error, setError] = useState(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const callBackend = async () => {
     setError(null);
@@ -17,7 +17,7 @@ function App() {
       setMessage(await response.text());
     } catch (err) {
       setMessage(null);
-      setError(err.message);
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -29,7 +29,7 @@ function App() {
           GitHub Codespaces <span className="heart">♥️</span> React
         </p>
         <p className="small">
-          Edit <code>src/App.jsx</code> and save to reload.
+          Edit <code>src/App.tsx</code> and save to reload.
         </p>
         <p>
           <a

@@ -2,7 +2,7 @@
 
 > Ce document est un prompt d'implémentation destiné à un agent IA (Claude Code ou équivalent).
 > Objectif : implémenter en une seule passe l'ensemble des fonctionnalités décrites ci-dessous, dans le monorepo existant (`apps/web` React/Vite, `apps/api` NestJS/Prisma/PostgreSQL — voir `CLAUDE.md` à la racine pour les conventions déjà en place : proxy Vite `/api`, `db:setup` automatique, `PrismaModule` global, etc.).
-> Respecter les conventions déjà établies (pas de TypeScript côté web, modules Nest par feature côté api) et ne pas casser le comportement documenté dans `CLAUDE.md`.
+> Respecter les conventions déjà établies (TypeScript de bout en bout — `apps/web` en TSX, `apps/api` en TS, modèles/schémas dual-usage mutualisés dans `packages/domain` — modules Nest par feature côté api) et ne pas casser le comportement documenté dans `CLAUDE.md`.
 
 ---
 
@@ -50,11 +50,11 @@ Ne pas introduire d'autres dépendances structurantes (state manager global, ORM
 
 Contrainte explicite : **aucun thème CSS PrimeReact** (pas de preset Aura/Material/Lara/Nora, pas de package `primereact` classique). PrimeReact v11 se décline en plusieurs couches (Headless / Primitive / Tailwind / Styled, voir `.claude/skills/primereact` §1) — ce projet utilise exclusivement la couche **Primitive** :
 
-- Composants ajoutés via `npx shadcn@latest add https://primereact.dev/r/<component>.json`, qui copie le code source localement dans `apps/web/src/components/ui/` (comportement/accessibilité PrimeReact inclus, zéro style imposé). Convertir immédiatement le fichier généré en `.jsx` sans annotations de type (le générateur produit du `.tsx` par défaut ; ce dépôt est JS/JSX uniquement, voir `CLAUDE.md`).
+- Composants ajoutés via `npx shadcn@latest add https://primereact.dev/r/<component>.json`, qui copie le code source localement dans `apps/web/src/components/ui/` (comportement/accessibilité PrimeReact inclus, zéro style imposé). Garder le fichier généré tel quel en `.tsx` (ce dépôt est TypeScript de bout en bout, voir `CLAUDE.md`) — seul le style est à retirer/adapter, pas les annotations de type.
 - Styliser directement ces fichiers copiés avec des classes Tailwind — pas de props `pt`/passthrough ni de `PrimeReactProvider` en mode `unstyled` à configurer, puisqu'il n'y a plus de thème runtime à désactiver : le fichier local est déjà 100 % vierge de style.
 - Définir dans `tailwind.config.js` une palette inspirée Material (tokens `primary`, `secondary`, `surface`, `success`, `error`, `warning`) avec un seul jeu de nuances par rôle — pas de dégradés, pas d'ombres portées (`shadow-*` proscrit au profit de bordures fines `border-slate-200`/`border-slate-700` pour délimiter les surfaces). Coins légèrement arrondis (`rounded-md`) mais jamais de `rounded-full` hors avatar/icônes.
 - États interactifs (hover/focus/active/disabled) gérés uniquement par variation de teinte Tailwind (`hover:bg-primary-600`, `focus-visible:ring-2`), jamais par élévation/ombre.
-- Un seul composant `src/components/ui/Modal.jsx` (basé sur le `Dialog` Primitive copié localement, compound API `Dialog.Root`/`Dialog.Trigger`/`Dialog.Content`) sert de socle à toutes les modales de l'application (Paramètres, Semaine de travail, etc.) pour garantir une apparence cohérente.
+- Un seul composant `src/components/ui/Modal.tsx` (basé sur le `Dialog` Primitive copié localement, compound API `Dialog.Root`/`Dialog.Trigger`/`Dialog.Content`) sert de socle à toutes les modales de l'application (Paramètres, Semaine de travail, etc.) pour garantir une apparence cohérente.
 
 ---
 
@@ -237,7 +237,7 @@ Parcours en **deux étapes**, non contournable tant qu'il n'est pas terminé (ro
 
 ### 5.5 Écran modal "Ma semaine de travail" (indépendant, réutilisable)
 
-Composant modal autonome (`src/components/WorkScheduleModal.jsx` ou équivalent), monté à deux endroits :
+Composant modal autonome (`src/components/WorkScheduleModal.tsx` ou équivalent), monté à deux endroits :
 - Étape 2 de l'onboarding (§5.4)
 - Menu avatar du header → "Ma semaine de travail" (§7.1), à tout moment après l'onboarding, pour modifier la configuration
 
@@ -307,7 +307,7 @@ Au moins :
 - Graphique en barres : totaux hebdomadaires sur les dernières N semaines.
 - Sélecteur de plage de dates (mois courant par défaut) réutilisant `GET /time-entries/analytics`.
 
-**Pas de `Chart` PrimeReact** (retiré de la version gratuite en v11, voir §2). Construire ces trois graphiques comme des composants SVG/Tailwind faits maison dans `src/components/charts/` (ex. `BarChart.jsx`, `TrendLine.jsx`) — barres = `<rect>` proportionnels aux valeurs, ligne = `<polyline>`/`<path>` avec une ligne de référence à `y=0`. Rester volontairement simple (pas de zoom, tooltip riche, ou animation avancée) : le besoin est de représenter des séries courtes (jours d'un mois, N semaines), pas un tableau de bord général. `ProgressBar`/`Knob`/`MeterGroup` PrimeReact (couche Primitive) restent une option pour un indicateur ponctuel isolé, mais pas pour ces trois graphiques multi-points.
+**Pas de `Chart` PrimeReact** (retiré de la version gratuite en v11, voir §2). Construire ces trois graphiques comme des composants SVG/Tailwind faits maison dans `src/components/charts/` (ex. `BarChart.tsx`, `TrendLine.tsx`) — barres = `<rect>` proportionnels aux valeurs, ligne = `<polyline>`/`<path>` avec une ligne de référence à `y=0`. Rester volontairement simple (pas de zoom, tooltip riche, ou animation avancée) : le besoin est de représenter des séries courtes (jours d'un mois, N semaines), pas un tableau de bord général. `ProgressBar`/`Knob`/`MeterGroup` PrimeReact (couche Primitive) restent une option pour un indicateur ponctuel isolé, mais pas pour ces trois graphiques multi-points.
 
 ---
 

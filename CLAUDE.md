@@ -6,8 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 RushHours — a POC monorepo (npm workspaces) exploring the React / NestJS / Prisma stack, built and run inside a GitHub Codespace. Goal: let an employee enter arrival/departure times per worked day and see monthly worked hours computed on the fly.
 
-- `apps/web` — React 18 + Vite frontend (plain JS/JSX, no TypeScript).
+- `apps/web` — React 18 + Vite frontend, TypeScript (TSX).
 - `apps/api` — NestJS + Prisma backend, TypeScript, backed by PostgreSQL.
+- `packages/domain` — framework-free TypeScript package shared by `apps/web` and `apps/api`: Zod schemas and pure domain utilities that are genuinely dual-usage front+back (see spec §4.2/§4.5/§5.4/§5.5). Compiled to `dist/` (CommonJS) and consumed like a normal npm dependency by both apps — not raw TS source, to avoid ESM/CJS interop issues.
 
 ## Commands
 
@@ -20,7 +21,7 @@ npm run dev:web             # web only
 npm run dev:api             # api only
 npm run build                # builds all workspaces
 npm run test                  # runs tests in all workspaces
-npm run lint                   # lints all workspaces (only api currently has a lint script)
+npm run lint                   # lints all workspaces
 npm run prisma:generate         # regenerate Prisma client (delegates to apps/api)
 npm run prisma:migrate           # create/apply a dev migration (delegates to apps/api)
 ```
@@ -54,7 +55,7 @@ Root `package.json` defines workspaces `apps/*` and uses `concurrently` to run b
 Seeding logic lives in `apps/api/prisma/seed.ts` and is registered via the `prisma.seed` key in `apps/api/package.json` (Prisma's seed convention) — it is invoked both by `prisma migrate dev` and by the `db:setup` chain above.
 
 ### Frontend → backend calls and Codespaces CORS
-`apps/web/src/App.jsx` calls the API through `import.meta.env.VITE_API_URL` (set in `apps/web/.env`). In dev this is set to `/api`, and `apps/web/vite.config.js` proxies `/api/*` to `http://localhost:3001/*` (Vite dev server rewrites, stripping the `/api` prefix). This exists specifically because GitHub Codespaces' forwarded-port reverse proxy injects its own auth layer, which breaks true cross-origin calls between two forwarded ports (e.g. the `*-3000.app.github.dev` origin calling `*-3001.app.github.dev` directly) with an opaque CORS/missing-header error. Keep frontend↔backend calls same-origin through this proxy rather than pointing `VITE_API_URL` at the forwarded 3001 URL directly. `apps/api/src/main.ts` also calls `app.enableCors()` unconditionally, which is needed for direct (non-Codespaces) access but is not what fixes the Codespaces case.
+`apps/web/src/App.tsx` calls the API through `import.meta.env.VITE_API_URL` (set in `apps/web/.env`). In dev this is set to `/api`, and `apps/web/vite.config.ts` proxies `/api/*` to `http://localhost:3001/*` (Vite dev server rewrites, stripping the `/api` prefix). This exists specifically because GitHub Codespaces' forwarded-port reverse proxy injects its own auth layer, which breaks true cross-origin calls between two forwarded ports (e.g. the `*-3000.app.github.dev` origin calling `*-3001.app.github.dev` directly) with an opaque CORS/missing-header error. Keep frontend↔backend calls same-origin through this proxy rather than pointing `VITE_API_URL` at the forwarded 3001 URL directly. `apps/api/src/main.ts` also calls `app.enableCors()` unconditionally, which is needed for direct (non-Codespaces) access but is not what fixes the Codespaces case.
 
 ### Nest module shape
 Standard single-module Nest app so far: `AppModule` imports `PrismaModule` and declares `AppController`/`AppService`. As real RushHours features are added (time entries, employees, monthly totals), follow Nest convention and add feature modules under `apps/api/src/` rather than growing `AppModule`.

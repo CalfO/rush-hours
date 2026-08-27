@@ -1,5 +1,4 @@
-import { Weekday } from "@prisma/client";
-import { getWeekdayForDate } from "./week-range.util";
+import { Weekday, getWeekdayForDate } from "@rushhours/domain";
 
 export interface WorkedMinutesInput {
   arrivalTime: Date;
