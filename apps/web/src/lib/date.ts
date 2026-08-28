@@ -15,3 +15,18 @@ export function toIsoDate(date: Date): string {
 export function toIsoMonth(date: Date): string {
   return date.toISOString().slice(0, 7);
 }
+
+/**
+ * PrimeReact's `DatePicker` (browser-local, timezone-oblivious) constructs
+ * `Date` values from the local wall-clock fields the user sees on screen
+ * (`getFullYear`/`getMonth`/`getDate`). This app instead treats every `Date`
+ * as a UTC-equivalent wall clock (see `DayCard.tsx`'s `toUtcCalendarDate` doc
+ * comment). This reinterprets a picker-produced Date's local wall-clock components as
+ * UTC ones, bridging the two conventions — without this, a non-UTC browser
+ * timezone would silently shift every selected date.
+ */
+export function toUtcMidnight(date: Date): Date {
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
+}

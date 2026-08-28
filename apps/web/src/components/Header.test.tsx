@@ -149,7 +149,9 @@ describe("Header (spec §7.1)", () => {
     expect(screen.getByText("RushHours")).toBeDefined();
     expect(screen.getByRole("tab", { name: "Time entry" })).toBeDefined();
     expect(screen.getByRole("tab", { name: "Analytics" })).toBeDefined();
-    expect(screen.getByRole("combobox", { name: "Language" })).toBeDefined();
+    expect(screen.getByRole("group", { name: "Language" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "FR" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "EN" })).toBeDefined();
     // Avatar initials derived from the authenticated user (Ada Lovelace).
     expect(screen.getByRole("button", { name: "AL" })).toBeDefined();
   });
@@ -180,8 +182,7 @@ describe("Header (spec §7.1)", () => {
     expect(screen.getByRole("tab", { name: "Time entry" })).toBeDefined();
     expect(screen.getByRole("tab", { name: "Analytics" })).toBeDefined();
 
-    await user.click(screen.getByRole("combobox", { name: "Language" }));
-    await user.click(await screen.findByRole("option", { name: "FR" }));
+    await user.click(screen.getByRole("button", { name: "FR" }));
 
     // Driven through the real i18next singleton (not a mock): selecting
     // "FR" flips `i18n.language` to "fr", which every `useTranslation()`
@@ -191,12 +192,11 @@ describe("Header (spec §7.1)", () => {
     expect(i18n.language).toBe("fr");
     expect(await screen.findByRole("tab", { name: "Saisie" })).toBeDefined();
     expect(await screen.findByRole("tab", { name: "Analyses" })).toBeDefined();
-    expect(screen.getByRole("combobox", { name: "Langue" })).toBeDefined();
+    expect(screen.getByRole("group", { name: "Langue" })).toBeDefined();
 
     // Switching back to English confirms this is a live, two-way selector
     // reacting to `onValueChange`, not a one-shot effect.
-    await user.click(screen.getByRole("combobox", { name: "Langue" }));
-    await user.click(await screen.findByRole("option", { name: "EN" }));
+    await user.click(screen.getByRole("button", { name: "EN" }));
 
     expect(i18n.language).toBe("en");
     expect(

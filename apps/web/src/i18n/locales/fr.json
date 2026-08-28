@@ -63,6 +63,7 @@
   "timeEntry": {
     "dateLabel": "Date",
     "timePlaceholder": "hh:mm",
+    "hourGridLabel": "Choisir l'heure",
     "arrivalTimeLabel": "Arrivée",
     "departureTimeLabel": "Départ",
     "lunchBreakStartLabel": "Début pause déjeuner",

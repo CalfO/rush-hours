@@ -9,7 +9,7 @@ import {
 } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Children, isValidElement } from "react";
+import { Children, createContext, isValidElement, useContext } from "react";
 import type { ReactElement, ReactNode } from "react";
 import TimeEntryPage from "./TimeEntryPage";
 import {
@@ -100,6 +100,49 @@ vi.mock("../components/ui/datepicker", () => {
     DatePickerPortal: Empty,
     DatePickerPositioner: Empty,
     DatePickerTime: Empty,
+  };
+});
+
+/*
+ * The Carousel primitive drives its paging off real DOM layout (scroll
+ * width/`IntersectionObserver`), which jsdom doesn't meaningfully provide —
+ * and, unmocked, it mounts all 7 `DayCard`s in the DOM at once (it scrolls
+ * between slides rather than unmounting them), which would break every
+ * `getByRole(..., { name: ... })` query below on "multiple elements found".
+ * This reduces it to rendering only the day at the `slide` index, matching
+ * what a real page/user actually sees at a time, without depending on
+ * PrimeReact's real scroll-snap mechanics.
+ */
+vi.mock("../components/ui/carousel", () => {
+  type CarouselProps = { slide?: number; children?: ReactNode };
+  const SlideContext = createContext(0);
+
+  function Carousel({ slide, children }: CarouselProps) {
+    return (
+      <SlideContext.Provider value={slide ?? 0}>
+        <div>{children}</div>
+      </SlideContext.Provider>
+    );
+  }
+
+  function CarouselContent({ children }: { children?: ReactNode }) {
+    const activeIndex = useContext(SlideContext);
+    const items = Children.toArray(children);
+    return <>{items[activeIndex] ?? null}</>;
+  }
+
+  function CarouselItem({ children }: { children?: ReactNode }) {
+    return <>{children}</>;
+  }
+
+  const Inert = () => null;
+
+  return {
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselPrev: Inert,
+    CarouselNext: Inert,
   };
 });
 

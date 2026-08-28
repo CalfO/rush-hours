@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getWeekRange, type Weekday } from "@rushhours/domain";
+import type { DatePickerRootValueChangeEvent } from "@primereact/types/primitive/datepicker";
 import { getWorkSchedule } from "../api/users";
 import {
   getSummary,
@@ -9,24 +10,37 @@ import {
   type RangeSummary,
   type TimeEntryRecord,
 } from "../api/time-entries";
-import { toIsoDate, toIsoMonth } from "../lib/date";
-import { DayForm } from "../components/DayForm";
+import { toIsoDate, toIsoMonth, toUtcMidnight } from "../lib/date";
+import { WeekCarousel } from "../components/WeekCarousel";
 import { BalanceIndicator } from "../components/BalanceIndicator";
 import { MonthCalendar } from "../components/MonthCalendar";
+import {
+  DatePicker,
+  DatePickerCalendar,
+  DatePickerInput,
+  DatePickerPanel,
+  DatePickerPopup,
+  DatePickerPortal,
+  DatePickerPositioner,
+} from "../components/ui/datepicker";
 
 type LoadState = "loading" | "ready" | "error";
 
 /** `new Date()`'s calendar day reinterpreted as a UTC-midnight `Date`, matching every
- * other date in this app (see `DayForm.tsx`'s UTC-wall-clock convention doc comment). */
+ * other date in this app (see `DayCard.tsx`'s `toUtcCalendarDate` doc comment). */
 function todayUtc(): Date {
   return new Date(toIsoDate(new Date()));
 }
 
 /**
- * Spec §7.2 "Vue Saisie" (`/`). Thin page: owns `selectedDate`/`currentMonth`
- * state and the two data fetches (work schedule once, summary+entries per
- * month), composes `DayForm`/`BalanceIndicator`/`MonthCalendar` — all three
- * are dumb, no independent fetching (architect plan).
+ * Spec §7.2 "Vue Saisie" (`/`) / §3 "Carousel". Thin page: owns
+ * `selectedDate`/`currentMonth` state and the two data fetches (work
+ * schedule once, summary+entries per month), composes a page-level date
+ * picker, `WeekCarousel`, `BalanceIndicator`, `MonthCalendar` — all of them
+ * dumb, no independent fetching (architect plan). `handleDateChange` below
+ * is the single callback wired to all three date-selection entry points
+ * (the date picker, `MonthCalendar.onSelectDate`, `WeekCarousel.onSelectDate`),
+ * so there is exactly one code path that ever calls `setSelectedDate`.
  */
 export default function TimeEntryPage() {
   const { t } = useTranslation();
@@ -195,7 +209,7 @@ export default function TimeEntryPage() {
   // The save mutates what the whole page's derived view depends on —
   // re-fetch summary + entries for the month currently shown. The saved
   // record itself isn't needed here (a wholesale re-fetch is simplest and
-  // keeps `daysByDate`/`entriesByDate` consistent), so `DayForm`'s
+  // keeps `daysByDate`/`entriesByDate` consistent), so `DayCard`'s
   // `onSaved: (entry) => void` is satisfied by this zero-arg handler. Called
   // from a click-triggered callback, not a `useEffect` body, so resetting
   // `loadedMonth` synchronously here (to make `isMonthLoading` derive `true`
@@ -223,9 +237,29 @@ export default function TimeEntryPage() {
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-surface-900">
-        {t("nav.entry")}
-      </h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-xl font-semibold text-surface-900">
+          {t("nav.entry")}
+        </h1>
+        <DatePicker
+          value={selectedDate}
+          onValueChange={(event: DatePickerRootValueChangeEvent) => {
+            const picked = (event.value as Date | null) ?? null;
+            if (picked) handleDateChange(toUtcMidnight(picked));
+          }}
+        >
+          <DatePickerInput aria-label={t("timeEntry.dateLabel")} />
+          <DatePickerPortal>
+            <DatePickerPositioner>
+              <DatePickerPopup>
+                <DatePickerPanel>
+                  <DatePickerCalendar />
+                </DatePickerPanel>
+              </DatePickerPopup>
+            </DatePickerPositioner>
+          </DatePickerPortal>
+        </DatePicker>
+      </div>
 
       {scheduleLoadState === "error" || monthLoadError ? (
         <p className="text-sm text-error-700">{t("timeEntry.loadError")}</p>
@@ -233,12 +267,12 @@ export default function TimeEntryPage() {
         <>
           <section className="rounded-lg border border-surface-200 bg-surface-0 p-4">
             {weekStartDay && !isLoading ? (
-              <DayForm
-                key={selectedIso}
-                date={selectedDate}
-                existingEntry={entriesByDate.get(selectedIso)}
+              <WeekCarousel
+                selectedDate={selectedDate}
+                weekStartDay={weekStartDay}
+                entriesByDate={entriesByDate}
+                onSelectDate={handleDateChange}
                 onSaved={handleSaved}
-                onDateChange={handleDateChange}
               />
             ) : (
               <p className="text-sm text-surface-500">

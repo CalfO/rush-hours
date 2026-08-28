@@ -21,9 +21,9 @@
 2. ✅ **Lot A — Prisma** — `ReferenceWeekEntry` (§5.2), migration `20260828192440_add_reference_week_entry`.
 3. ✅ **Lot A — `packages/domain`** — `reference-week.schema.ts` (§5.3) + `reference-week.schema.spec.ts` (42 tests domain au total, tous verts).
 4. ✅ **Lot A — API** — endpoints `reference-week` (§5.4) + validation weekday ⊆ WorkingDaySchedule (commit `eb620f3`) + 10 tests e2e (commit `9b2e8b5`). Review : 1 bloquant (lint `no-unsafe-member-access`) + 1 non-bloquant réel (race TOCTOU dans `replaceReferenceWeek`) — les deux corrigés (`dev-tester`/`senior-developer`), re-vérifiés indépendamment par l'orchestrateur : lint/build/test (44)/e2e (51) tous verts. **Lot A backend terminé.**
-5. ⬜ **Lot B — `DayCard`/`WeekCarousel`** (§3) — extraction, nouveau composant, remontée du date-picker.
-6. ⬜ **Lot B — grille d'heures en popover** (§4.2).
-7. ⬜ **Lot B — sélecteur de langue** (§6) — `ToggleButtonGroup`.
+5. ✅ **Lot B — `DayCard`/`WeekCarousel`** (§3) — extraction `DayForm`→`DayCard`, `WeekCarousel.tsx` (Carousel PrimeReact réel), remontée du date-picker dans `TimeEntryPage`. Vérifié manuellement en navigateur (Postgres local + WebAuthn virtuel CDP) : carousel, calendrier, indicateurs, placeholder heure (§2) tous fonctionnels. Note : bannière "Invalid PrimeUI License" globale pré-existante (`PrimeReactProvider` sans clé, hors scope).
+6. ✅ **Lot B — grille d'heures en popover** (§4.2) — 2 bugs réels trouvés en vérification manuelle et corrigés : (1) le popover ne s'ouvrait jamais (`PopoverTrigger asChild` sur `PRDatePicker.Hour`, qui ignore les props JSX fusionnées sauf `children`) ; (2) un pick dans la grille était silencieusement écrasé par un clic +/- suivant (bug d'ordonnancement dans le `useEffect([props.value])` de la lib headless — contourné par un second `onValueChange` en microtask). Les deux corrections vérifiées indépendamment par l'orchestrateur en navigateur (`09:30` pick → `+1` → `10:30`, correct).
+7. ✅ **Lot B — sélecteur de langue** (§6) — `ToggleButtonGroup`, confirmé visuellement fonctionnel (FR/EN en boutons). **Lot B terminé, en attente de dev-tester/reviewer.**
 8. ⬜ **Lot C — semaine de référence front** — API client, `ConfirmDialog`, popup (§5.5), menu suppression (§5.6), switch (§5.7).
 9. ⬜ **i18n** — clés du §8, FR + EN (au fil des lots B/C).
 10. ⬜ **Qualité** — `npm run lint`/`build`/`test` verts sur les 3 workspaces.

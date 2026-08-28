@@ -30,8 +30,16 @@ import {
   useDatePickerContext,
 } from "primereact/datepicker";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { buttonVariants } from "./button";
 import { inputTextVariants } from "./inputtext";
+import {
+  Popover,
+  PopoverPopup,
+  PopoverPortal,
+  PopoverPositioner,
+  PopoverTrigger,
+} from "./popover";
 
 export type DatePickerProps = Omit<DatePickerRootProps, "size" | "variant">;
 
@@ -344,6 +352,130 @@ function TimePicker({
   );
 }
 
+const hourGridButtonClass = `inline-flex items-center justify-center rounded-md h-8 text-sm font-medium tabular-nums cursor-pointer
+    text-surface-700 dark:text-surface-0
+    transition-colors duration-150
+    hover:bg-surface-100 dark:hover:bg-surface-800
+    focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-primary`;
+
+/**
+ * `timeFieldClass` styled for use as the hour-grid `PopoverTrigger`'s own
+ * root element rather than as a static `<span>` — see the comment on
+ * `DatePickerHourGrid` below for why the trigger is styled directly instead
+ * of via `asChild` on `PRDatePicker.Hour`.
+ */
+const hourTriggerClass = `${timeFieldClass} cursor-pointer border-0 transition-colors duration-150
+    hover:bg-surface-100 dark:hover:bg-surface-800
+    focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-primary`;
+
+/**
+ * Spec §4.2 "Saisie d'heure simplifiée" — clicking the hour field opens a
+ * 24-cell grid picker instead of requiring repeated increment/decrement
+ * clicks. No dedicated absolute-hour setter exists on
+ * `useDatePickerContext()`'s public return value (`getIncrementProps`/
+ * `getDecrementProps` only wire to private *relative* steppers) — what IS
+ * safely reachable is the context's own `.props` object (already used above
+ * for `showSeconds`/`hourFormat`/`timeOnly`), which also carries
+ * `.value`/`.onValueChange`, the same controlled-value contract `DayCard`
+ * already wires through `field.onChange`. So `onValueChange` is called
+ * directly here — not a private-internals hack.
+ *
+ * `PRDatePicker.Hour` cannot be `PopoverTrigger`'s `asChild` target: its
+ * `render()` (see `primereact/datepicker`'s `DatePicker.Hour`) builds its
+ * DOM attrs solely from the datepicker's internal `hourProps`/`cx("hour")`,
+ * ignoring whatever `asChild` tries to merge onto it (`onClick` included) —
+ * so the popover never opened. Instead the trigger renders its own real
+ * `<button>` (default `as="button"`, styled via `hourTriggerClass`) with
+ * `PRDatePicker.Hour` nested inside purely for its formatted-hour display;
+ * `useDatePickerContext()` is still in scope since this all renders inside
+ * `DatePickerTime`. `type="button"` is required here — `usePopover`'s
+ * `triggerProps` doesn't set it (unlike `getIncrementProps`/
+ * `getDecrementProps`, which do), and this renders inside `DayCard`'s
+ * `<form>`, so an unset type would default to "submit".
+ */
+function DatePickerHourGrid() {
+  const { t } = useTranslation();
+  const datepicker = useDatePickerContext();
+  const [open, setOpen] = React.useState(false);
+
+  function pick(hour: number) {
+    const current = (datepicker?.props.value as Date | null) ?? new Date();
+    const next = new Date(current);
+    next.setHours(hour, current.getMinutes(), 0, 0);
+    const onValueChange = datepicker?.props.onValueChange;
+    onValueChange?.({ value: next });
+    setOpen(false);
+
+    // The +/- steppers (`PRDatePicker.Increment`/`Decrement`) don't read
+    // `props.value` at all — they read the headless hook's own internal
+    // hour/minute/second state, which the hook reconciles from
+    // `props.value` in an effect keyed on `[props.value]` (see
+    // `@primereact/headless/datepicker`, minified as `nr`/`useDatePicker`
+    // in `node_modules/@primereact/headless/datepicker/index.mjs`). That
+    // effect is itself buggy: it calls its internal `lt()` (re-derive
+    // hour/min/sec from the hook's current memoized selection) *before*
+    // `et(e)` (apply the incoming `value` to that memoized selection) —
+    // so the very first reconciliation pass after any external
+    // `onValueChange` (this grid, but also manually typing a full HH:MM
+    // into `DatePickerInput`) reads the PRE-change hour/minute, not the
+    // new one, leaving the steppers' internal ref (`V.current` for hour)
+    // stuck on the old value while `props.value`/the visible input text
+    // are already correct. Confirmed by reading that effect's body
+    // directly, not just observed behavior.
+    //
+    // Firing `onValueChange` a second time with an equivalent-but-new
+    // Date, once the first render/commit (and that first, stale
+    // reconciliation pass) has flushed, makes the *second* pass run
+    // against the hook's by-then-updated memoized selection — which is
+    // now the picked value — so it resyncs the steppers' internal state
+    // correctly. `setTimeout(..., 0)` (a macrotask) is used rather than
+    // an effect in this component: this component is a *descendant* of
+    // the `DatePicker.Root` that owns the hook, and React flushes child
+    // passive effects before ancestor ones in the same commit, so an
+    // effect here would still run before the hook's own `[value]` effect
+    // has had its first (stale) pass — a macrotask reliably runs after
+    // React's synchronous render+commit+passive-effect flush for the
+    // click handler's state updates instead. Verified live: without this
+    // second dispatch, incrementing the hour after a grid pick jumped to
+    // an unrelated value instead of picked+1; with it, the picked hour is
+    // preserved and increments/decrements by exactly one step.
+    window.setTimeout(() => {
+      onValueChange?.({ value: new Date(next) });
+    }, 0);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={(event) => setOpen(!!event.value)}>
+      <PopoverTrigger type="button" className={hourTriggerClass}>
+        <PRDatePicker.Hour />
+      </PopoverTrigger>
+      <PopoverPortal>
+        <PopoverPositioner>
+          <PopoverPopup>
+            <div
+              className="grid grid-cols-6 gap-1"
+              role="listbox"
+              aria-label={t("timeEntry.hourGridLabel")}
+            >
+              {Array.from({ length: 24 }, (_, hour) => (
+                <button
+                  key={hour}
+                  type="button"
+                  role="option"
+                  onClick={() => pick(hour)}
+                  className={hourGridButtonClass}
+                >
+                  {String(hour).padStart(2, "0")}
+                </button>
+              ))}
+            </div>
+          </PopoverPopup>
+        </PopoverPositioner>
+      </PopoverPortal>
+    </Popover>
+  );
+}
+
 function DatePickerTime({ className, ...props }: DatePickerTimeProps) {
   const datepicker = useDatePickerContext();
   const showSeconds = !!datepicker?.props.showSeconds;
@@ -361,7 +493,7 @@ function DatePickerTime({ className, ...props }: DatePickerTimeProps) {
       {...props}
     >
       <TimePicker type="hour">
-        <PRDatePicker.Hour className={timeFieldClass} />
+        <DatePickerHourGrid />
       </TimePicker>
 
       <PRDatePicker.Separator className={timeSeparatorClass}>

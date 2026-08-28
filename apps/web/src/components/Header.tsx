@@ -15,16 +15,9 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "./ui/menu";
-import {
-  Select,
-  SelectList,
-  SelectPopup,
-  SelectPortal,
-  SelectPositioner,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
 import { Tabs, TabsList, TabsTab } from "./ui/tabs";
+import { ToggleButton } from "./ui/togglebutton";
+import { ToggleButtonGroup } from "./ui/togglebuttongroup";
 
 /**
  * Spec §7.1 — the two supported UI languages. Labels are the language codes
@@ -107,28 +100,21 @@ export function Header() {
         </Tabs>
 
         <div className="ml-auto flex items-center gap-3">
-          <Select
+          <ToggleButtonGroup
             value={i18n.language}
             onValueChange={(event) => {
               if (typeof event.value === "string") {
                 void i18n.changeLanguage(event.value);
               }
             }}
-            options={LANGUAGE_OPTIONS}
-            optionLabel="label"
-            optionValue="value"
+            aria-label={t("header.languageLabel")}
           >
-            <SelectTrigger aria-label={t("header.languageLabel")}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectPortal>
-              <SelectPositioner>
-                <SelectPopup>
-                  <SelectList />
-                </SelectPopup>
-              </SelectPositioner>
-            </SelectPortal>
-          </Select>
+            {LANGUAGE_OPTIONS.map((option) => (
+              <ToggleButton key={option.value} value={option.value}>
+                {option.label}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
 
           <Menu>
             <MenuTrigger className="cursor-pointer rounded-full outline-none focus-visible:outline focus-visible:outline-primary">
