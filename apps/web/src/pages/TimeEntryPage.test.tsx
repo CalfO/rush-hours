@@ -110,6 +110,7 @@ vi.mock("../api/users", () => ({
 }));
 
 vi.mock("../api/time-entries", () => ({
+  getAnalytics: vi.fn(),
   getSummary: vi.fn(),
   listMonth: vi.fn(),
   upsertTimeEntry: vi.fn(),

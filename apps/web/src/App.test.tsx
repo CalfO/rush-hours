@@ -10,13 +10,14 @@ vi.mock("./api/users", () => ({
   updateProfile: vi.fn(),
 }));
 vi.mock("./api/time-entries", () => ({
+  getAnalytics: vi.fn(),
   getSummary: vi.fn(),
   listMonth: vi.fn(),
   upsertTimeEntry: vi.fn(),
 }));
 
 import { getWorkSchedule } from "./api/users";
-import { getSummary, listMonth } from "./api/time-entries";
+import { getAnalytics, getSummary, listMonth } from "./api/time-entries";
 
 /**
  * Spec §7 (lines 273-282): "/" is the Vue Saisie, and (last line) "Toutes
@@ -75,6 +76,15 @@ beforeEach(() => {
     },
   });
   vi.mocked(listMonth).mockResolvedValue([]);
+  vi.mocked(getAnalytics).mockResolvedValue({
+    days: [],
+    weeks: [],
+    total: {
+      workedMinutes: 0,
+      targetMinutes: 0,
+      balanceMinutes: 0,
+    },
+  });
   fetchMock = vi.fn().mockResolvedValue({
     ok: true,
     status: 200,

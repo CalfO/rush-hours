@@ -51,6 +51,15 @@ export function getSummary(month: string): Promise<RangeSummary> {
   );
 }
 
+/** §6 `GET /time-entries/analytics?from=YYYY-MM-DD&to=YYYY-MM-DD`. */
+export function getAnalytics(from: string, to: string): Promise<RangeSummary> {
+  return apiFetch<RangeSummary>(
+    `/time-entries/analytics?from=${encodeURIComponent(
+      from,
+    )}&to=${encodeURIComponent(to)}`,
+  );
+}
+
 /** §6 `PUT /time-entries/:date` — upsert, body validated by `timeEntrySchema`. */
 export function upsertTimeEntry(
   date: string,

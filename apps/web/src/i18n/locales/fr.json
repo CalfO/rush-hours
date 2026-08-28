@@ -75,5 +75,29 @@
     "monthTotalLabel": "Total du mois",
     "previousMonth": "Mois précédent",
     "nextMonth": "Mois suivant"
+  },
+  "analytics": {
+    "title": "Analyses",
+    "range": "Période : {{from}} → {{to}}",
+    "periodLabel": "Période d'analyse",
+    "month": "Mois",
+    "week": "Semaine",
+    "custom": "Plage libre",
+    "referenceDate": "Date de référence",
+    "from": "Du",
+    "to": "Au",
+    "invalidRange": "La date de début doit être antérieure ou égale à la date de fin.",
+    "loading": "Chargement des analyses…",
+    "loadError": "Impossible de charger vos analyses. Veuillez réessayer.",
+    "empty": "Aucune saisie sur la période sélectionnée.",
+    "dailyTitle": "Heures travaillées par jour",
+    "dailyChart": "Graphique des heures travaillées par jour",
+    "balanceTitle": "Évolution du solde cumulé",
+    "balanceChart": "Graphique de l'évolution du solde cumulé",
+    "currentBalance": "Solde cumulé",
+    "weeklyTitle": "Totaux hebdomadaires ({{count}} dernières semaines)",
+    "weeklyChart": "Graphique des totaux hebdomadaires",
+    "noWeeks": "Aucun total hebdomadaire disponible.",
+    "hours": "heures"
   }
 }

@@ -1,6 +1,7 @@
-import { beforeAll, describe, expect, test, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { PrimeReactProvider } from "@primereact/core";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import TimeEntryPage from "./pages/TimeEntryPage";
@@ -30,6 +31,20 @@ import type { AuthUser } from "./api/auth";
  * (covered in `src/auth/AuthProvider.*.test.tsx`).
  */
 vi.mock("./auth/AuthProvider", () => ({ useAuth: vi.fn() }));
+vi.mock("./api/users", () => ({
+  getWorkSchedule: vi.fn(),
+  putWorkSchedule: vi.fn(),
+  updateProfile: vi.fn(),
+}));
+vi.mock("./api/time-entries", () => ({
+  getAnalytics: vi.fn(),
+  getSummary: vi.fn(),
+  listMonth: vi.fn(),
+  upsertTimeEntry: vi.fn(),
+}));
+
+import { getWorkSchedule } from "./api/users";
+import { getAnalytics, getSummary, listMonth } from "./api/time-entries";
 
 const routes = [
   { path: "/login", element: <LoginPage /> },
@@ -45,7 +60,11 @@ const routes = [
 
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
-  render(<RouterProvider router={router} />);
+  render(
+    <PrimeReactProvider>
+      <RouterProvider router={router} />
+    </PrimeReactProvider>,
+  );
 }
 
 const authenticatedOnboardedUser: AuthUser = {
@@ -68,6 +87,26 @@ describe("route table (spec §7)", () => {
         i18n.on("initialized", () => resolve());
       });
     }
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getWorkSchedule).mockResolvedValue({
+      weeklyContractHours: 35,
+      weekStartDay: "MONDAY",
+      days: [],
+    });
+    vi.mocked(getAnalytics).mockResolvedValue({
+      days: [],
+      weeks: [],
+      total: { workedMinutes: 0, targetMinutes: 0, balanceMinutes: 0 },
+    });
+    vi.mocked(getSummary).mockResolvedValue({
+      days: [],
+      weeks: [],
+      total: { workedMinutes: 0, targetMinutes: 0, balanceMinutes: 0 },
+    });
+    vi.mocked(listMonth).mockResolvedValue([]);
   });
 
   test("/login renders the login page even for an already-authenticated, onboarded user (it sits outside the guard)", () => {

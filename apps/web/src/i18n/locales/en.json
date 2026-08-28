@@ -75,5 +75,29 @@
     "monthTotalLabel": "Month total",
     "previousMonth": "Previous month",
     "nextMonth": "Next month"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "range": "Period: {{from}} → {{to}}",
+    "periodLabel": "Analytics period",
+    "month": "Month",
+    "week": "Week",
+    "custom": "Custom range",
+    "referenceDate": "Reference date",
+    "from": "From",
+    "to": "To",
+    "invalidRange": "The start date must be on or before the end date.",
+    "loading": "Loading analytics…",
+    "loadError": "Couldn't load your analytics. Please try again.",
+    "empty": "No time entries for the selected period.",
+    "dailyTitle": "Hours worked per day",
+    "dailyChart": "Chart of hours worked per day",
+    "balanceTitle": "Cumulative balance trend",
+    "balanceChart": "Chart of the cumulative balance trend",
+    "currentBalance": "Cumulative balance",
+    "weeklyTitle": "Weekly totals (last {{count}} weeks)",
+    "weeklyChart": "Chart of weekly totals",
+    "noWeeks": "No weekly totals available.",
+    "hours": "hours"
   }
 }
