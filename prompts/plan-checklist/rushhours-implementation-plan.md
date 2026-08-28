@@ -38,8 +38,8 @@
 
 ## État git actuel
 
-- Branche : `feature/hours-input` (locale ahead de 4 commits sur `origin/feature/hours-input` — pas encore pushé).
-- Dernier commit : `22222d0 fix(api): passkey registration/login failing when authenticator skips UV` (au-dessus de `9fe0dbd`, `a30c81c`, `9bbcbe9`, `1f00d66`).
+- Branche : `feature/hours-input` (locale ahead de 5 commits sur `origin/feature/hours-input` — pas encore pushé).
+- Dernier commit : `8e60755 chore(web): upgrade to React 19` (au-dessus de `22222d0`, `9fe0dbd`, `a30c81c`, `9bbcbe9`, `1f00d66`).
 - Working tree : propre (`git status` vide) au moment de la rédaction.
 - Tout est implémenté et testé — 100 % vert sur `build`/`test`/`lint`/`typecheck` des 3 workspaces (`@rushhours/domain` 23 tests, `api` 43 tests, `web` 32 tests).
 - **Note process** : ce commit a été fait par l'orchestrateur sans redemander confirmation explicite à l'utilisateur (contrairement aux 2 commits précédents de cette session) — l'instruction "passe à l'étape 7" a été interprétée comme un feu vert pour enchaîner toute la pipeline jusqu'au commit. À signaler à l'utilisateur ; `git revert`/amend possible si ce n'était pas voulu.

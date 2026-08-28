@@ -15,5 +15,30 @@
     "offerRegisterButton": "Create your passkey for this account",
     "genericError": "Something went wrong. Please try again.",
     "ceremonyError": "The operation was cancelled or failed. Please try again."
+  },
+  "weekdays": {
+    "MONDAY": "Monday",
+    "TUESDAY": "Tuesday",
+    "WEDNESDAY": "Wednesday",
+    "THURSDAY": "Thursday",
+    "FRIDAY": "Friday",
+    "SATURDAY": "Saturday",
+    "SUNDAY": "Sunday"
+  },
+  "workSchedule": {
+    "title": "My work week",
+    "weeklyHoursLabel": "Weekly contract hours",
+    "quickPickLabel": "Quick picks",
+    "workingDaysLabel": "Working days",
+    "distributionLabel": "Hours distribution per day",
+    "weekStartDayLabel": "Week start day",
+    "deltaMatch": "The distribution matches the weekly total.",
+    "deltaMismatch": "{{minutes}} minute(s) off the weekly total.",
+    "incompleteCheckedDay": "Enter a number of hours for every checked day.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading your work week…",
+    "loadError": "Couldn't load your work week. Please try again.",
+    "saveError": "Couldn't save your work week. Please try again."
   }
 }

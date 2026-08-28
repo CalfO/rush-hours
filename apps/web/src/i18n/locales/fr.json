@@ -15,5 +15,30 @@
     "offerRegisterButton": "Créer votre passkey pour ce compte",
     "genericError": "Une erreur est survenue. Veuillez réessayer.",
     "ceremonyError": "L'opération a été annulée ou a échoué. Veuillez réessayer."
+  },
+  "weekdays": {
+    "MONDAY": "Lundi",
+    "TUESDAY": "Mardi",
+    "WEDNESDAY": "Mercredi",
+    "THURSDAY": "Jeudi",
+    "FRIDAY": "Vendredi",
+    "SATURDAY": "Samedi",
+    "SUNDAY": "Dimanche"
+  },
+  "workSchedule": {
+    "title": "Ma semaine de travail",
+    "weeklyHoursLabel": "Heures contractuelles hebdomadaires",
+    "quickPickLabel": "Raccourcis",
+    "workingDaysLabel": "Jours travaillés",
+    "distributionLabel": "Répartition des heures par jour",
+    "weekStartDayLabel": "Jour de début de semaine",
+    "deltaMatch": "La répartition correspond au total hebdomadaire.",
+    "deltaMismatch": "Écart de {{minutes}} minute(s) avec le total hebdomadaire.",
+    "incompleteCheckedDay": "Indiquez un nombre d'heures pour chaque jour coché.",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "loading": "Chargement de votre semaine de travail…",
+    "loadError": "Impossible de charger votre semaine de travail. Veuillez réessayer.",
+    "saveError": "Impossible d'enregistrer votre semaine de travail. Veuillez réessayer."
   }
 }

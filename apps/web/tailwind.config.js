@@ -1,6 +1,14 @@
+import primeui from "tailwindcss-primeui";
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  // Gate `dark:` variants behind an explicit `.dark` class that this app never
+  // sets (spec §2.1 — single Material-flat light theme, no dark mode planned).
+  // Without this, Tailwind's default 'media' strategy would activate the
+  // PrimeReact Primitive components' `dark:` classes purely from OS
+  // preference, producing an inconsistent half-dark UI we never designed for.
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -22,13 +30,26 @@ export default {
           700: "#00695c",
           900: "#004d40",
         },
+        // Full 0-950 scale (Tailwind's own `slate`, matching this repo's
+        // components.json baseColor and the --p-surface-* CSS variables in
+        // index.css) rather than a partial Material-grey set — the
+        // shadcn-generated Primitive components (src/components/ui/) use the
+        // complete scale (e.g. `border-surface-300`, `bg-surface-800`), and a
+        // gap at any shade silently drops that utility's CSS rule.
         surface: {
           DEFAULT: "#ffffff",
-          50: "#fafafa",
-          100: "#f5f5f5",
-          500: "#9e9e9e",
-          700: "#424242",
-          900: "#212121",
+          0: "#ffffff",
+          50: "#f8fafc",
+          100: "#f1f5f9",
+          200: "#e2e8f0",
+          300: "#cbd5e1",
+          400: "#94a3b8",
+          500: "#64748b",
+          600: "#475569",
+          700: "#334155",
+          800: "#1e293b",
+          900: "#0f172a",
+          950: "#020617",
         },
         success: {
           DEFAULT: "#2e7d32",
@@ -60,5 +81,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [primeui],
 };
