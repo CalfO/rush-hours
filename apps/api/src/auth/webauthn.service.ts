@@ -70,6 +70,16 @@ export class WebauthnService {
       expectedChallenge,
       expectedOrigin: this.origin,
       expectedRPID: this.rpID,
+      // `generateRegistrationOptions` below asks for `userVerification:
+      // "preferred"`, not "required" — but `@simplewebauthn/server` defaults
+      // this flag to `true` regardless, so it was silently enforcing a
+      // stricter policy than what was actually requested. An authenticator
+      // is free to skip UV when it's only "preferred" (e.g. some
+      // password-manager-backed passkey saves don't prompt for a PIN/
+      // biometric), which made verification fail with "User verification
+      // was required, but user could not be verified" for otherwise-valid
+      // registrations. Set explicitly to match the "preferred" policy.
+      requireUserVerification: false,
     });
   }
 
@@ -94,6 +104,11 @@ export class WebauthnService {
       expectedOrigin: this.origin,
       expectedRPID: this.rpID,
       credential,
+      // Same reasoning as verifyRegistrationResponse above: match the
+      // "preferred" userVerification policy requested by
+      // generateAuthenticationOptions, rather than the library's default of
+      // silently requiring it.
+      requireUserVerification: false,
     });
   }
 }
