@@ -9,6 +9,7 @@
 
 ## Décisions / déviations par rapport au spec figé
 
+- **2026-08-28 — Réconciliation hash de commit.** Le fichier référençait un hash de commit qui n'existe plus dans le repo ; le repo actuel montre `1f00d66` en HEAD avec un message et un contenu identiques (probable recommit après perte de VM Codespace). Contenu inchangé, seul le hash a été corrigé partout dans ce fichier — pas de code perdu.
 - **2026-08-27 — TypeScript de bout en bout.** Le spec imposait initialement "pas de TypeScript côté web" (voir historique git de `prompts/spec/rushhours-full-spec.md`). L'utilisateur est revenu dessus explicitement en cours de session pour uniformiser tout le monorepo en TypeScript ("je veux une uniformité en utilisant du typescript de partout"). `CLAUDE.md`, le spec (intro + §2.1 + noms de fichiers futurs `.jsx`→`.tsx`), et `.claude/agents/architect.md`/`senior-developer.md` ont été mis à jour en conséquence.
 - **2026-08-27 — `packages/domain`.** Nouveau workspace, pas prévu explicitement par le spec, introduit pour mutualiser les éléments explicitement dual-usage front+back : schémas Zod (§4.2 saisie journalière, §5.5/§6 semaine de travail, §5.4 profil) + `getWeekRange`/`getWeekdayForDate`/`Weekday` (§4.5, le spec l'appelle littéralement "utilitaire partagé"). TypeScript pur, compilé en **CommonJS** vers `dist/` (jamais ESM — évite le piège d'interop déjà rencontré une fois sur ce projet avec les deps WebAuthn), consommé à l'identique par `apps/api` et `apps/web` comme une dépendance npm normale. Build one-shot (pas de `tsc --watch`) intégré via des hooks `predev`/`prebuild`/`pretest` à la racine + `apps/api`/`apps/web` `prestart`. `balance.util.ts` (§4.1/§4.4) reste côté `apps/api/src/time-tracking/` : pas dual-usage, le front ne fait qu'afficher les totaux déjà calculés par l'API.
 
@@ -17,10 +18,10 @@
 1. ✅ **Prisma** — schema complet (`User`, `WorkingDaySchedule`, `Credential`, `TimeEntry`, `WebauthnChallenge`), migrations, `seed.ts`, modèle `Hello` supprimé. Commit `7f6efba`.
 2. ✅ **API — fondations** — `nestjs-pino`, `nestjs-zod`, `@simplewebauthn/server`, `@nestjs/jwt`, `cookie-parser`, `.env.example` (`WEBAUTHN_RP_ID`/`WEBAUTHN_ORIGIN`/`JWT_SECRET`). Commit `7f6efba`.
 3. ✅ **API — module Auth** — endpoints WebAuthn complets (§5.2), `AuthGuard` global + `@Public()`. Review passée (2 findings bloquants corrigés : fuite du JWT de session dans les logs pino, lint des tests). Commit `7f6efba`.
-4. ✅ **API — module Users** — `apps/api/src/users/` : `PATCH /users/me`, `GET`/`PUT /users/me/work-schedule` (transaction Prisma, remplacement intégral, pose `onboardingCompletedAt`). Implémenté + testé (e2e, isolation multi-utilisateur, remplacement intégral). **Commité (`04436c3`). ⚠️ Review pas encore reçue — voir "État git actuel" et "Prochaines étapes".**
-5. ✅ **API — module TimeEntries** — `apps/api/src/time-entries/` : CRUD + `summary` + `analytics`, réutilise `balance.util.ts` (préexistant) + `getWeekRange` de `packages/domain`. Tests unitaires + e2e couvrant les cas limites du spec (jour non travaillé, jour travaillé sans saisie, pause hors 12h-14h, semaine à cheval sur deux mois, `weekStartDay` ≠ lundi). **Commité (`04436c3`). ⚠️ Review pas encore reçue.**
-   - ✅ `packages/domain` créé dans la foulée (voir décisions ci-dessus) — **commité (`04436c3`)**, même statut review-pas-encore-reçue.
-   - ✅ Migration TypeScript complète d'`apps/web` (étape "front — fondations" partielle, uniquement l'outillage, voir point 6) — **commité (`04436c3`)** dans le même commit, review pas encore reçue non plus.
+4. ✅ **API — module Users** — `apps/api/src/users/` : `PATCH /users/me`, `GET`/`PUT /users/me/work-schedule` (transaction Prisma, remplacement intégral, pose `onboardingCompletedAt`). Implémenté + testé (e2e, isolation multi-utilisateur, remplacement intégral). **Commité (`1f00d66`). ⚠️ Review pas encore reçue — voir "État git actuel" et "Prochaines étapes".**
+5. ✅ **API — module TimeEntries** — `apps/api/src/time-entries/` : CRUD + `summary` + `analytics`, réutilise `balance.util.ts` (préexistant) + `getWeekRange` de `packages/domain`. Tests unitaires + e2e couvrant les cas limites du spec (jour non travaillé, jour travaillé sans saisie, pause hors 12h-14h, semaine à cheval sur deux mois, `weekStartDay` ≠ lundi). **Commité (`1f00d66`). ⚠️ Review pas encore reçue.**
+   - ✅ `packages/domain` créé dans la foulée (voir décisions ci-dessus) — **commité (`1f00d66`)**, même statut review-pas-encore-reçue.
+   - ✅ Migration TypeScript complète d'`apps/web` (étape "front — fondations" partielle, uniquement l'outillage, voir point 6) — **commité (`1f00d66`)** dans le même commit, review pas encore reçue non plus.
 6. ⬜ **Front — fondations** — Tailwind (tokens Material flat §2.1), setup PrimeReact Primitive via shadcn (`components.json`), react-router, react-i18next, structure de dossiers (`src/pages`, `src/components`, `src/components/ui`, `src/components/charts`, `src/api`, `src/i18n`). **Non commencé** — seule la coquille Vite par défaut a été migrée en TypeScript (`App.tsx`/`index.tsx`/`vite.config.ts`, ESLint + typecheck), aucune dépendance produit ni structure de dossiers du spec n'existe encore.
 7. ⬜ **Front — Auth** — écran login passkey (`@simplewebauthn/browser`), garde de route, `AuthProvider` (`GET /auth/me` au démarrage).
 8. ⬜ **Front — modal "Ma semaine de travail"** (§5.5), composant indépendant réutilisé ensuite à 2 endroits.
@@ -34,11 +35,11 @@
 ## État git actuel
 
 - Branche : `feature/hours-input`.
-- Dernier commit : `04436c3 feat: add time-entries/users API on a shared domain package, migrate web to TSX` (au-dessus de `7f6efba`, fondations + Auth déjà review-validées). **Commité par l'utilisateur directement** (pas via le flow "review clean → commit" habituel de la pipeline — la review n'a donc pas encore eu lieu sur ce contenu).
+- Dernier commit : `1f00d66 feat: add time-entries/users API on a shared domain package, migrate web to TSX` (au-dessus de `7f6efba`, fondations + Auth déjà review-validées). **Commité par l'utilisateur directement** (pas via le flow "review clean → commit" habituel de la pipeline — la review n'a donc pas encore eu lieu sur ce contenu).
 - Working tree : propre (`git status` vide) au moment de la rédaction.
 - Tout est implémenté et testé — 100 % vert sur `build`/`test`/`test:e2e`/`lint` des 3 workspaces (`@rushhours/domain`, `api`, `web`) d'après les rapports des agents d'implémentation (pas encore re-vérifié par un reviewer indépendant).
 
-## Review reçue (commit `04436c3`) — 2 findings à corriger, rien de structurellement remis en cause
+## Review reçue (commit `1f00d66`) — 2 findings à corriger, rien de structurellement remis en cause
 
 Le reviewer a rendu son verdict (build/test/lint/e2e re-vérifiés indépendamment par lui, y compris un rebuild propre `rm -rf */dist && npm run build` depuis la racine — tout passe). Détail complet dans la transcription de l'agent si besoin, résumé ici :
 
@@ -52,7 +53,7 @@ Le reviewer a rendu son verdict (build/test/lint/e2e re-vérifiés indépendamme
 1. Corriger le bug `PATCH /users/me` → 500 sur email en doublon (`apps/api/src/users/users.service.ts`) — via `senior-developer`, puis re-vérifier avec `dev-tester`/tests e2e.
 2. Ajouter `prebuild: npm run lint` (ou `typecheck && lint`) sur `apps/web`, et un hook `prebuild: npm run lint` sur `apps/api` (actuellement absent) — §8.2 du spec.
 3. Optionnel avant le lot front Auth/Onboarding : aligner `apps/web/eslint.config.mjs` sur `recommendedTypeChecked` comme `apps/api`.
-4. Ces corrections partiront en commit(s) séparé(s) de `04436c3` (déjà poussé/committé), sauf si l'utilisateur demande explicitement un amend.
+4. Ces corrections partiront en commit(s) séparé(s) de `1f00d66` (déjà poussé/committé), sauf si l'utilisateur demande explicitement un amend.
 5. Une fois ces 2 findings corrigés (ou l'utilisateur décide de les traiter plus tard) : démarrer le lot **Front — fondations** (étape 6 de la checklist) via `architect` — préalable bloquant pour 7 à 12.
 6. Enchaîner ensuite : Front Auth → WorkScheduleModal → Onboarding → Header → Vue Saisie → Vue Analyses.
 7. Vérification manuelle bout en bout (étape 14) en toute fin de lot front.

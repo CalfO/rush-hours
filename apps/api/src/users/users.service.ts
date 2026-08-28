@@ -1,4 +1,5 @@
-import { Injectable } from "@nestjs/common";
+import { ConflictException, Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { WorkScheduleDto } from "./dto/work-schedule.dto";
@@ -17,23 +18,33 @@ export class UsersService {
 
   /** §6 `PATCH /users/me` — profile fields only, explicit `select` (never spread User). */
   async updateProfile(userId: string, dto: UpdateProfileDto) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        email: dto.email,
-      },
-      select: {
-        id: true,
-        username: true,
-        role: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        onboardingCompletedAt: true,
-      },
-    });
+    try {
+      return await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          email: dto.email,
+        },
+        select: {
+          id: true,
+          username: true,
+          role: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          onboardingCompletedAt: true,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new ConflictException("Email already in use");
+      }
+      throw error;
+    }
   }
 
   /** §6 `GET /users/me/work-schedule`. */

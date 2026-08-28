@@ -97,6 +97,34 @@ describe("Users (e2e)", () => {
         .send({ firstName: "Ada" })
         .expect(400);
     });
+
+    it("returns 409 (not 500) when the email is already used by another user", async () => {
+      const owner = await createAuthenticatedUser("e2e-profile-email-owner");
+      const { cookie } = await createAuthenticatedUser(
+        "e2e-profile-email-claimer",
+      );
+      const takenEmail = `taken-${randomUUID()}@example.com`;
+
+      await request(app.getHttpServer())
+        .patch("/users/me")
+        .set("Cookie", owner.cookie)
+        .send({
+          firstName: "Grace",
+          lastName: "Hopper",
+          email: takenEmail,
+        })
+        .expect(200);
+
+      await request(app.getHttpServer())
+        .patch("/users/me")
+        .set("Cookie", cookie)
+        .send({
+          firstName: "Ada",
+          lastName: "Lovelace",
+          email: takenEmail,
+        })
+        .expect(409);
+    });
   });
 
   describe("GET /users/me/work-schedule (§6)", () => {
