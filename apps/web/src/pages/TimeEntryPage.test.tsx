@@ -371,4 +371,41 @@ describe("TimeEntryPage (spec §7.2)", () => {
     expect(await screen.findByText(currentMonth)).toBeDefined();
     expect(getSummary).toHaveBeenCalledWith(currentMonth);
   });
+
+  test("the page-level date-picker jumps directly to a day outside the currently displayed week, re-rendering the carousel on the week containing it (spec §3.2)", async () => {
+    render(<TimeEntryPage />);
+
+    // Sanity check the starting point: today's card is pre-filled from
+    // `savedEntry` (the mocked existing entry for `selectedIso`).
+    expect(
+      (await screen.findByRole("textbox", { name: "Arrival" })).getAttribute(
+        "value",
+      ),
+    ).toBe("08:30");
+
+    // Jump straight to a day in the *next month* (necessarily a different
+    // displayed week too) via the page-level date-picker — not the monthly
+    // calendar, not the carousel itself.
+    fireEvent.change(screen.getByRole("textbox", { name: "Date" }), {
+      target: { value: `${nextMonth}-01` },
+    });
+
+    expect(
+      screen.getByRole("textbox", { name: "Date" }).getAttribute("value"),
+    ).toBe(`${nextMonth}-01`);
+
+    // The carousel re-renders for the week containing the newly picked
+    // date: `listMonth` has no entry for `${nextMonth}-01` (mocked to
+    // return `[]` for any month other than `currentMonth`), so its card's
+    // Arrival field comes back empty rather than still showing "08:30"
+    // (which would mean the carousel silently kept showing the old day/week
+    // instead of following the date-picker across the month/week boundary).
+    await waitFor(() =>
+      expect(
+        screen.getByRole("textbox", { name: "Arrival" }).getAttribute("value"),
+      ).toBe(""),
+    );
+    expect(getSummary).toHaveBeenCalledWith(nextMonth);
+    expect(listMonth).toHaveBeenCalledWith(nextMonth);
+  });
 });
