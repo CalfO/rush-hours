@@ -13,6 +13,8 @@ void i18next
       en: { translation: en },
     },
     fallbackLng: "fr",
+    supportedLngs: ["fr", "en"],
+    nonExplicitSupportedLngs: true,
     detection: {
       order: ["localStorage", "navigator"],
       caches: ["localStorage"],

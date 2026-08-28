@@ -53,5 +53,11 @@
   "onboarding": {
     "continue": "Continue",
     "stepIndicator": "Step {{current}} of {{total}}"
+  },
+  "header": {
+    "myProfile": "My profile",
+    "myWorkSchedule": "My work week",
+    "logout": "Log out",
+    "languageLabel": "Language"
   }
 }
