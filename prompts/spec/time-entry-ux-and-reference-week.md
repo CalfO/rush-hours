@@ -14,6 +14,8 @@
 2. **Carousel de jours** — la saisie d'un jour est présentée dans un carousel de cards, une card par jour de la semaine de l'utilisateur, tout en gardant un input calendrier pour aller directement à un jour donné.
 3. **Saisie d'heure simplifiée** — clic sur un champ heure → sélecteur heures/minutes avec +/- (déjà en place, à vérifier non régressé) ; clic sur la valeur des heures dans ce sélecteur → grille de toutes les heures de la journée en popover, pour une sélection en un clic.
 4. **Semaine de référence** — si une semaine complète est saisie, proposer de l'enregistrer comme semaine de référence (une seule par utilisateur) ; nouvelle entrée de menu utilisateur pour la supprimer ; switch sur le premier jour de la semaine pour réutiliser ses valeurs sur toute la semaine.
+5. **Sélecteur de langue** — remplacer le `Select` (dropdown) actuel du header par un `SelectButton`/`ToggleButtonGroup` PrimeReact.
+6. **Bug** — le contenu de toutes les modales (`Modal.tsx`) colle aux bords, padding interne cassé.
 
 Chaque point est détaillé ci-dessous avec les décisions techniques figées nécessaires pour lever toute ambiguïté (même esprit que `rushhours-full-spec.md` §2 "choix complémentaires").
 
@@ -59,14 +61,14 @@ Vérifier si un composant `Carousel` existe dans la couche **Primitive** gratuit
 
 ### 4.1 Ce qui existe déjà (ne pas régresser)
 
-Le clic sur un champ heure (`timeOnly` + `hourFormat="24"`) ouvre déjà un popover heures/minutes avec boutons +/- (`DatePickerTime`/`TimePicker` dans `datepicker.tsx`, l. 324-400 — `PRDatePicker.Hour`/`PRDatePicker.Minute` encadrés de `PRDatePicker.Increment`/`PRDatePicker.Decrement`). C'est exactement le comportement demandé pour ce sous-point — s'assurer qu'il reste intact après la restructuration du point 3 (les 4 champs heure de `DayCard` gardent leur `<DatePickerPopup><DatePickerTime /></DatePickerPopup>`).
+Le clic sur un champ heure ouvre déjà un popover heures/minutes avec boutons +/-. Ce comportement repose sur le composant PrimeReact `Calendar` — renommé `DatePicker` en v11 (voir `.claude/skills/primereact` §3, table "Spec said (v10 name) → Actual v11 name") — utilisé avec son option **`timeOnly`** (+ `hourFormat="24"`), déjà adopté et local à ce repo dans `apps/web/src/components/ui/datepicker.tsx` (`DatePickerTime`/`TimePicker`, l. 324-400 — `PRDatePicker.Hour`/`PRDatePicker.Minute` encadrés de `PRDatePicker.Increment`/`PRDatePicker.Decrement`). C'est exactement le socle attendu pour ce sous-point (et pour le point 4.2 ci-dessous) — **ne pas introduire un composant différent**, s'assurer que ce comportement reste intact après la restructuration du point 3 (les 4 champs heure de `DayCard` gardent leur `<DatePickerPopup><DatePickerTime /></DatePickerPopup>`).
 
 ### 4.2 Nouveau — grille d'heures en popover au clic sur la valeur des heures
 
-Au clic sur la valeur numérique des **heures** (le `PRDatePicker.Hour` actuel, dans `TimePicker type="hour"`), ouvrir un second popover imbriqué contenant une **grille de toutes les heures de la journée** (0 à 23, en grille par ex. 6 colonnes × 4 lignes ou 4×6), permettant de sélectionner l'heure en un clic au lieu d'incrémenter/décrémenter. Après sélection dans la grille, le popover d'heures se referme et rend la main au popover minutes/heures existant (ou se ferme entièrement si l'UX choisie par le `senior-developer` le justifie — au choix, du moment que l'heure choisie est bien appliquée).
+Au clic sur la valeur numérique des **heures** (le `PRDatePicker.Hour` actuel, dans `TimePicker type="hour"`), ouvrir un second popover imbriqué contenant une **grille de toutes les heures de la journée** (0 à 23, en grille par ex. 6 colonnes × 4 lignes ou 4×6), permettant de sélectionner l'heure en un clic au lieu d'incrémenter/décrémenter. Cette grille est une extension du même composant `DatePicker`/`timeOnly` déjà en place (4.1) — pas un composant de saisie d'heure alternatif. Après sélection dans la grille, le popover d'heures se referme et rend la main au popover minutes/heures existant (ou se ferme entièrement si l'UX choisie par le `senior-developer` le justifie — au choix, du moment que l'heure choisie est bien appliquée).
 
-**Note technique pour l'implémentation** (ne pas deviner, vérifier avant de coder) : `datepicker.tsx` s'appuie sur `useDatePickerContext()` (`primereact/datepicker`) pour lire/modifier l'état interne du picker (voir usage dans `DayTableBody`/`MonthTableBody`/`DatePickerTime`). Avant d'écrire la grille d'heures :
-1. Inspecter l'API exposée par ce contexte (`grep` dans `node_modules/primereact/datepicker` ou `.claude/skills/primereact/references/llm-full.md`) pour trouver comment fixer directement une valeur d'heure (probable équivalent de ce que font en interne `PRDatePicker.Hour`/`Increment`/`Decrement`).
+**Note technique pour l'implémentation** (ne pas deviner, vérifier avant de coder) : `datepicker.tsx` s'appuie sur `useDatePickerContext()` (`primereact/datepicker`) pour lire/modifier l'état interne du picker (voir usage dans `DayTableBody`/`MonthTableBody`/`DatePickerTime`, et les types `UseDatePickerMonthData`/`UseDatePickerMonthOptions`/`UseDatePickerYearOptions` déjà importés depuis `@primereact/types/headless/datepicker`). Avant d'écrire la grille d'heures :
+1. Inspecter l'API exposée par ce contexte (`grep` dans `node_modules/primereact/datepicker` et `node_modules/@primereact/types/headless/datepicker`, ou `.claude/skills/primereact/references/llm-full.md`) pour trouver comment fixer directement une valeur d'heure (probable équivalent de ce que font en interne `PRDatePicker.Hour`/`Increment`/`Decrement` — par ex. un setter exposé par le contexte, à confirmer sur la version installée).
 2. Si aucune API contextuelle adaptée n'existe, alternative valable : construire la grille **au niveau de `DayCard`** (pas dans `datepicker.tsx`), en s'appuyant sur le fait que chaque champ heure y est déjà entièrement contrôlé via `Controller`/`field.value`/`field.onChange` (React Hook Form) — un bouton de la grille peut directement appeler `field.onChange(new Date(...))` en ne changeant que l'heure et en conservant les minutes actuelles, exactement comme le fait déjà `clampLocalTimeOfDay` pour les champs de pause.
 3. Réutiliser les primitives de popover déjà en place dans ce repo pour un menu imbriqué (`Portal`/`Positioner`/`Popup`, motif déjà utilisé par `DatePicker`, `Select` et `Menu` dans `src/components/ui/`) plutôt que d'introduire un nouveau mécanisme de positionnement.
 
@@ -82,6 +84,8 @@ Une **semaine de référence** est un jeu d'heures type (arrivée, départ, déb
 
 Une semaine de référence n'a pas de date propre : elle est indexée par jour de semaine (`Weekday`), pas par `Date`. Elle ne couvre que les jours travaillés de l'utilisateur au moment de l'enregistrement (`WorkingDaySchedule`) — un jour non travaillé n'a pas de ligne de référence.
 
+**Ce qui définit "une semaine complète" est entièrement piloté par les paramètres de l'utilisateur, pas par une hypothèse figée sur 5 ou 7 jours.** `WorkingDaySchedule` (spec d'origine §3/§4.3) est déjà une liste libre de 1 à 7 lignes par utilisateur (jours cochés dans la modal "Ma semaine de travail", §5.5 de la spec d'origine) — un utilisateur peut très bien n'avoir que 3 ou 4 jours travaillés. Une "semaine complète" = **tous les jours présents dans le `WorkingDaySchedule` actuel de l'utilisateur ont une `TimeEntry` pour la semaine affichée**, quel que soit ce nombre (1 à 7). `ReferenceWeekEntry` (5.2) hérite naturellement de cette flexibilité : c'est déjà une table à lignes libres par `(userId, weekday)`, sans hypothèse de cardinalité — aucun ajustement structurel du modèle n'est nécessaire au-delà de ce qui suit.
+
 ### 5.2 Modèle de données (Prisma)
 
 Étendre `apps/api/prisma/schema.prisma` :
@@ -95,7 +99,7 @@ model ReferenceWeekEntry {
   lunchBreakStartMinutes Int
   lunchBreakEndMinutes   Int
   createdAt              DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  updatedAt              DateTime @updatedAt
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -109,13 +113,15 @@ Ajouter la relation `referenceWeekEntries ReferenceWeekEntry[]` sur `User`. Pas 
 
 Créer la migration correspondante (`npx prisma migrate dev` côté `apps/api`, voir `CLAUDE.md`).
 
+**Scripts d'initialisation (`apps/api/prisma/seed.ts`)** : aucun changement nécessaire. Le seed actuel ne crée que les deux comptes `user`/`admin` (`username`, `role`) — il ne crée déjà aucune ligne `WorkingDaySchedule` (configurée uniquement via l'onboarding/la modal "Ma semaine de travail", spec d'origine §5.4/§5.5). `ReferenceWeekEntry` suit la même logique : c'est une donnée strictement issue d'une action utilisateur explicite (§5.5 ci-dessous), jamais pré-remplie — aucune ligne à seeder pour les comptes de démo.
+
 ### 5.3 Schéma partagé (`packages/domain`)
 
 Nouveau fichier `packages/domain/src/reference-week.schema.ts`, exporté depuis `packages/domain/src/index.ts` (ré-exports nommés explicites, **pas** de `export *` — voir la décision déjà actée le 2026-08-28 dans `prompts/plan-checklist/rushhours-implementation-plan.md`, ce piège Vite/ESM a déjà cassé l'app une fois).
 
 - `referenceWeekDaySchema` : `{ weekday: Weekday, arrivalMinutes, departureMinutes, lunchBreakStartMinutes, lunchBreakEndMinutes }`, minutes toutes dans `[0, 1439]`.
 - Règles de cohérence par jour, transposées de `time-entry.schema.ts` (spec d'origine §4.2) en version "minutes du jour" : `arrivalMinutes < lunchBreakStartMinutes < lunchBreakEndMinutes < departureMinutes`, `lunchBreakStartMinutes >= 12*60` et `lunchBreakEndMinutes <= 14*60`.
-- `referenceWeekSchema` : tableau de `referenceWeekDaySchema`, `weekday` unique dans le tableau, 1 à 7 entrées.
+- `referenceWeekSchema` : tableau de `referenceWeekDaySchema`, `weekday` unique dans le tableau, **1 à 7 entrées** — la borne haute suit celle, tout aussi libre, de `workScheduleSchema` (spec d'origine §5.5, "au moins 1 jour coché"), pas une supposition de semaine standard.
 
 ### 5.4 API (`apps/api/src/users/`, même module que `work-schedule` — même pattern d'URL)
 
@@ -126,6 +132,8 @@ Nouveau fichier `packages/domain/src/reference-week.schema.ts`, exporté depuis 
 | DELETE | `/users/me/reference-week` | Supprime toutes les lignes de l'utilisateur courant (`deleteMany`). Idempotent (pas d'erreur si déjà vide). |
 
 Suivre exactement le pattern déjà en place pour `work-schedule` (`apps/api/src/users/users.service.ts`, `users.controller.ts`, `dto/work-schedule.dto.ts`) : DTO nestjs-zod dédié, tests unitaires + e2e couvrant au minimum le remplacement intégral, la suppression, et l'isolation multi-utilisateur (déjà le standard de ce repo, voir checklist étape 4).
+
+**Validation supplémentaire côté service, au-delà du schéma Zod** : `PUT /users/me/reference-week` doit rejeter (400) toute entrée dont le `weekday` n'appartient pas au `WorkingDaySchedule` **actuel** de l'utilisateur — cohérent avec 5.1 ("elle ne couvre que les jours travaillés") et avec la nature 1-à-7-jours de `WorkingDaySchedule`. Concrètement : charger le `WorkingDaySchedule` de l'utilisateur dans le même service avant d'écrire, comparer l'ensemble des `weekday` du body à celui de `WorkingDaySchedule`, 400 si le body en contient un absent. Ça évite qu'une semaine de référence dérive silencieusement d'une config de semaine de travail obsolète dès l'écriture (voir aussi §7, la dérive *a posteriori* si `WorkingDaySchedule` change après-coup reste une limite assumée, non résolue ici).
 
 ### 5.5 Popup "Enregistrer comme semaine de référence ?"
 
@@ -152,7 +160,31 @@ Dans `apps/web/src/components/Header.tsx`, ajouter un item dans le `Menu` avatar
 
 ---
 
-## 6. i18n
+## 6. Sélecteur de langue — `SelectButton`
+
+**Fichier** : `apps/web/src/components/Header.tsx`, l. 109-131 — le sélecteur de langue (FR/EN) utilise actuellement le `Select` Primitive (`src/components/ui/select.tsx`, dropdown).
+
+**Fix** : remplacer par le composant que l'utilisateur appelle `SelectButton` — nom v10, renommé **`ToggleButtonGroup`** en v11 (voir `.claude/skills/primereact` §3, même renommage déjà exploité dans ce repo pour le raccourci 35/37/40 de `WorkScheduleModal`, spec d'origine §5.5). **Aucun nouveau composant à tirer via shadcn** : `apps/web/src/components/ui/togglebuttongroup.tsx` existe déjà dans ce repo, l'utiliser tel quel comme socle (`ToggleButtonGroup` + `ToggleButton`/options, même pattern que dans `WorkScheduleModal.tsx` l. 446-466).
+
+- Deux options FR/EN (mêmes `LANGUAGE_OPTIONS` déjà définies en tête de `Header.tsx`, l. 35-38 — valeur = code langue, libellé = `"FR"`/`"EN"`, inchangés).
+- Comportement conservé à l'identique : sélection → `i18n.changeLanguage(value)`, valeur active dérivée de `i18n.language`.
+- Retirer l'import du `Select` seulement pour cet usage précis — le sélecteur de jour de début de semaine (`WorkScheduleModal`) et tout autre usage de `Select` dans l'app restent inchangés, ce point ne concerne que le header.
+
+---
+
+## 7. Bug — padding du contenu des modales
+
+**Cause racine identifiée** : `apps/web/src/components/ui/dialog.tsx` utilise les classes Tailwind `p-4.5` (`DialogHeader`, l. 111), `px-4.5 pb-4.5` (`DialogContent`, l. 99) et `pt-0 px-4.5 pb-4.5` (`DialogFooter`, l. 144) — mais `4.5` **n'existe pas** dans l'échelle d'espacement par défaut de Tailwind v3 (`apps/web/package.json` : `tailwindcss@^3.4.19`), qui saute de `4` à `5`. Une classe référençant une clé d'échelle inexistante ne génère **aucune règle CSS** (JIT Tailwind v3) — ces classes sont donc des no-ops silencieux depuis leur création, et le contenu de **toutes** les modales (`Modal.tsx`, donc `WorkScheduleModal`, `ProfileModal`, et tout ce qui en découle dans ce lot — `ConfirmDialog`, §5.5/§5.6) colle réellement aux bords, exactement le même type de bug déjà rencontré une fois dans ce repo avec la palette `surface` incomplète (voir `prompts/plan-checklist/rushhours-implementation-plan.md`, entrée "Trouvé et corrigé avant la 1ère review... palette Tailwind `surface`").
+
+Un `grep` rapide montre que **`4.5` n'est pas un cas isolé** : `apps/web/src/components/ui/checkbox.tsx` (`size-4.5`) et `apps/web/src/components/ui/avatar.tsx` (`size-10.5`) utilisent le même genre de clé hors-échelle, avec le même effet silencieux (case à cocher et avatar rendus à une taille par défaut du navigateur/inattendue plutôt que la taille prévue par le design shadcn-généré).
+
+**Fix (root cause, pas un patch au cas par cas)** : suivre le même principe déjà appliqué pour `surface` — étendre `theme.extend.spacing` dans `apps/web/tailwind.config.js` avec les clés manquantes réellement utilisées dans `src/components/ui/` (`4.5: "1.125rem"`, `10.5: "2.625rem"` — valeurs cohérentes avec la progression `0.25rem` par unité de l'échelle Tailwind par défaut), plutôt que de réécrire chaque classe `*-4.5`/`*-10.5` individuellement. Ce fix corrige en une fois le padding des modales **et**, en bonus vérifiable, la taille des checkboxes et de l'avatar — le signaler explicitement dans le rapport final (ce n'est pas du hors-scope, c'est la même cause racine).
+
+Après le fix, vérifier visuellement (navigateur) qu'au moins une modale existante (`WorkScheduleModal` ou `ProfileModal`) a désormais un espacement interne cohérent entre son contenu et ses bords, header et footer compris.
+
+---
+
+## 8. i18n
 
 Ajouter au minimum ces clés dans `apps/web/src/i18n/locales/{fr,en}.json`, groupe `timeEntry.*` existant (et un nouveau groupe `referenceWeek.*`) :
 
@@ -162,25 +194,28 @@ Ajouter au minimum ces clés dans `apps/web/src/i18n/locales/{fr,en}.json`, grou
 - `referenceWeek.useSwitchLabel` (§5.7)
 - `header.deleteReferenceWeek`, `referenceWeek.deleteConfirmTitle`, `referenceWeek.deleteConfirmDescription` (§5.6)
 
+Pas de nouvelle clé nécessaire pour §6 (sélecteur de langue) : `LANGUAGE_OPTIONS` garde ses libellés `"FR"`/`"EN"` non traduits, comme aujourd'hui.
+
 ---
 
-## 7. Limites assumées pour ce lot (à documenter, ne pas tenter de résoudre)
+## 9. Limites assumées pour ce lot (à documenter, ne pas tenter de résoudre)
 
-- Comme pour `WorkingDaySchedule` (spec d'origine §9), la semaine de référence n'est pas historisée : si la configuration "jours travaillés" change ensuite, une semaine de référence peut contenir des jours qui ne sont plus travaillés (elle reste utilisable telle quelle, simplement ignorée pour ces jours-là au moment du préremplissage).
-- Pas de multi-semaines de référence (ex. "semaine haute"/"semaine basse" en alternance) — hors scope, une seule per utilisateur comme demandé.
+- Comme pour `WorkingDaySchedule` (spec d'origine §9), la semaine de référence n'est pas historisée : si la configuration "jours travaillés" change ensuite (après l'enregistrement de la semaine de référence), une semaine de référence peut contenir des jours qui ne sont plus travaillés (elle reste utilisable telle quelle, simplement ignorée pour ces jours-là au moment du préremplissage) — la validation du §5.4 n'empêche que la dérive *à l'écriture*, pas *a posteriori*.
+- Pas de multi-semaines de référence (ex. "semaine haute"/"semaine basse" en alternance) — hors scope, une seule par utilisateur comme demandé.
 - Le popup de proposition (§5.5) ne se déclenche que sur un enregistrement qui complète la semaine à l'instant T ; il ne rescanne pas rétroactivement les semaines déjà complètes plus anciennes à l'ouverture de l'app.
 
 ---
 
-## 8. Plan d'implémentation suggéré (ordre pour l'agent)
+## 10. Plan d'implémentation suggéré (ordre pour l'agent)
 
-1. **Prisma** : `ReferenceWeekEntry` (§5.2), migration, pas de changement de seed nécessaire.
-2. **`packages/domain`** : `reference-week.schema.ts` (§5.3), tests unitaires (spec-as-test, cas limites minutes hors bornes / pause hors 12h-14h / doublon de weekday).
-3. **API** : endpoints `reference-week` dans le module `users` existant (§5.4), tests unitaires + e2e.
-4. **Front — correctif placeholder** (§2), rapide, indépendant du reste.
+1. **Front — bug padding modales** (§7) et **bug placeholder heure** (§2) : deux correctifs rapides et indépendants du reste, à traiter en premier.
+2. **Prisma** : `ReferenceWeekEntry` (§5.2), migration, pas de changement de seed nécessaire (justifié §5.2).
+3. **`packages/domain`** : `reference-week.schema.ts` (§5.3), tests unitaires (spec-as-test, cas limites minutes hors bornes / pause hors 12h-14h / doublon de weekday).
+4. **API** : endpoints `reference-week` dans le module `users` existant (§5.4), y compris la validation "weekday ⊆ WorkingDaySchedule actuel", tests unitaires + e2e.
 5. **Front — `DayCard`/`WeekCarousel`** (§3) : extraction de `DayForm` → `DayCard`, nouveau `WeekCarousel`, remontée du date-picker de sélection de jour dans `TimeEntryPage`. Vérifier manuellement en navigateur que la synchronisation carousel ↔ calendrier mensuel ↔ input calendrier reste cohérente dans les deux sens.
 6. **Front — grille d'heures en popover** (§4.2), après investigation de l'API `useDatePickerContext()` (ou repli sur l'implémentation au niveau `DayCard`, voir §4.2 point 2).
 7. **Front — semaine de référence** : `src/api/reference-week.ts`, `ConfirmDialog.tsx` générique, popup de proposition (§5.5), item de menu + confirmation de suppression (§5.6), switch de préremplissage (§5.7).
-8. **i18n** : clés du §6, FR + EN.
-9. **Qualité** : `npm run lint`/`npm run build`/`npm run test` verts sur les trois workspaces (`domain`, `api`, `web`), comme à chaque lot précédent.
-10. **Vérification manuelle bout en bout** : saisir une semaine complète, accepter la proposition de semaine de référence, changer de semaine, activer le switch de préremplissage sur le jour de début de semaine, vérifier le non-écrasement des jours déjà saisis, supprimer la semaine de référence depuis le menu utilisateur et vérifier que le switch/l'item de menu disparaissent en conséquence.
+8. **Front — sélecteur de langue** (§6), indépendant du reste, peut être fait à tout moment.
+9. **i18n** : clés du §8, FR + EN.
+10. **Qualité** : `npm run lint`/`npm run build`/`npm run test` verts sur les trois workspaces (`domain`, `api`, `web`), comme à chaque lot précédent.
+11. **Vérification manuelle bout en bout** : padding des modales et sélecteur de langue visuellement corrects ; saisir une semaine complète (avec un utilisateur configuré sur moins de 7 jours travaillés, pour vérifier que la définition 1-7 jours de §5.1 est bien respectée) ; accepter la proposition de semaine de référence ; changer de semaine ; activer le switch de préremplissage sur le jour de début de semaine ; vérifier le non-écrasement des jours déjà saisis ; supprimer la semaine de référence depuis le menu utilisateur et vérifier que le switch/l'item de menu disparaissent en conséquence.
