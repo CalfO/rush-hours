@@ -40,5 +40,18 @@
     "loading": "Loading your work week…",
     "loadError": "Couldn't load your work week. Please try again.",
     "saveError": "Couldn't save your work week. Please try again."
+  },
+  "profile": {
+    "title": "My profile",
+    "firstNameLabel": "First name",
+    "lastNameLabel": "Last name",
+    "emailLabel": "Email",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveError": "Couldn't save your profile. Please try again."
+  },
+  "onboarding": {
+    "continue": "Continue",
+    "stepIndicator": "Step {{current}} of {{total}}"
   }
 }

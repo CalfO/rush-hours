@@ -37,6 +37,20 @@ interface WorkScheduleModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved?: (schedule: WorkScheduleInput) => void;
+  /**
+   * Forwarded to the underlying `Modal`'s own `dismissible` prop (Escape /
+   * outside-click / the `X` button). Defaults to `true`. Onboarding step 2
+   * (spec §5.4) is the first consumer that needs `false` — a mandatory step
+   * must not be dismissible via the chrome around the form.
+   */
+  dismissible?: boolean;
+  /**
+   * Whether this modal's own internal Cancel button renders. Defaults to
+   * `true`. Onboarding step 2 passes `false` alongside `dismissible={false}`:
+   * without it, a live-but-inert Cancel button calling a no-op
+   * `onOpenChange` would be confusing dead UI in a supposedly-mandatory step.
+   */
+  cancellable?: boolean;
 }
 
 /**
@@ -242,9 +256,11 @@ function WorkScheduleDayRow({
 function DeltaAndActions({
   control,
   onCancel,
+  cancellable = true,
 }: {
   control: Control<FormValues>;
   onCancel: () => void;
+  cancellable?: boolean;
 }) {
   const { t } = useTranslation();
   const { isSubmitting, errors } = useFormState({ control });
@@ -295,13 +311,15 @@ function DeltaAndActions({
         <p className="text-sm text-error-700">{errors.root.message}</p>
       )}
       <div className="flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-md border border-surface-300 px-4 py-2 text-sm text-surface-700 hover:bg-surface-100"
-        >
-          {t("workSchedule.cancel")}
-        </button>
+        {cancellable && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-md border border-surface-300 px-4 py-2 text-sm text-surface-700 hover:bg-surface-100"
+          >
+            {t("workSchedule.cancel")}
+          </button>
+        )}
         <button
           type="submit"
           disabled={
@@ -333,9 +351,11 @@ function DeltaAndActions({
 function WorkScheduleForm({
   onOpenChange,
   onSaved,
+  cancellable = true,
 }: {
   onOpenChange: (open: boolean) => void;
   onSaved?: (schedule: WorkScheduleInput) => void;
+  cancellable?: boolean;
 }) {
   const { t } = useTranslation();
   const [loadState, setLoadState] = useState<LoadState>("loading");
@@ -506,6 +526,7 @@ function WorkScheduleForm({
           <DeltaAndActions
             control={control}
             onCancel={() => onOpenChange(false)}
+            cancellable={cancellable}
           />
         </form>
       )}
@@ -514,17 +535,20 @@ function WorkScheduleForm({
 }
 
 /**
- * Spec §5.5 — standalone, reusable "Ma semaine de travail" modal. Not wired
- * into any trigger point yet (that's onboarding step 2 and the header
- * avatar menu, both later lots) — this lot only builds the component
- * itself. `WorkScheduleForm` is only rendered while `open`, so it (re)fetches
- * the current schedule exactly once per open session (see its own doc
- * comment) rather than on every mount of this wrapper.
+ * Spec §5.5 — standalone, reusable "Ma semaine de travail" modal. Used by
+ * onboarding step 2 (spec §5.4, `dismissible={false} cancellable={false}` —
+ * a mandatory step) and by the header avatar menu (later lot, normal
+ * dismissible/cancellable defaults). `WorkScheduleForm` is only rendered
+ * while `open`, so it (re)fetches the current schedule exactly once per
+ * open session (see its own doc comment) rather than on every mount of
+ * this wrapper.
  */
 export default function WorkScheduleModal({
   open,
   onOpenChange,
   onSaved,
+  dismissible = true,
+  cancellable = true,
 }: WorkScheduleModalProps) {
   const { t } = useTranslation();
 
@@ -533,9 +557,14 @@ export default function WorkScheduleModal({
       open={open}
       onOpenChange={onOpenChange}
       title={t("workSchedule.title")}
+      dismissible={dismissible}
     >
       {open && (
-        <WorkScheduleForm onOpenChange={onOpenChange} onSaved={onSaved} />
+        <WorkScheduleForm
+          onOpenChange={onOpenChange}
+          onSaved={onSaved}
+          cancellable={cancellable}
+        />
       )}
     </Modal>
   );

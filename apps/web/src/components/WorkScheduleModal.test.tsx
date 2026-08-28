@@ -63,6 +63,13 @@ import i18n from "../i18n/config";
  *     -> "a failed save shows an error message and keeps the modal open"
  * - load failure shows an error state instead of a broken/empty form
  *     -> "a failed load shows an error message instead of the form"
+ * - `dismissible={false}` (used by onboarding step 2, spec §5.4, to pin the
+ *   modal open with "no cancel escape route") disables Escape/backdrop/X
+ *   dismissal -> "dismissible=false hides the close (X) button and Escape
+ *   does not close the modal"
+ * - `cancellable={false}` (same mandatory-step use case) hides the modal's
+ *   own internal Cancel button -> "cancellable=false hides the internal
+ *   Cancel button without affecting the dismissible (X) button"
  */
 
 vi.mock("../api/users", () => ({
@@ -94,12 +101,18 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-function renderModal() {
+function renderModal(props?: { dismissible?: boolean; cancellable?: boolean }) {
   const onOpenChange = vi.fn();
   const onSaved = vi.fn();
   render(
     <PrimeReactProvider>
-      <WorkScheduleModal open onOpenChange={onOpenChange} onSaved={onSaved} />
+      <WorkScheduleModal
+        open
+        onOpenChange={onOpenChange}
+        onSaved={onSaved}
+        dismissible={props?.dismissible}
+        cancellable={props?.cancellable}
+      />
     </PrimeReactProvider>,
   );
   return { onOpenChange, onSaved };
@@ -526,5 +539,36 @@ describe("WorkScheduleModal (spec §5.5)", () => {
     ).toBeDefined();
     expect(screen.queryByRole("checkbox")).toBeNull();
     expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
+  });
+
+  test("dismissible=false hides the close (X) button and Escape does not close the modal", async () => {
+    vi.mocked(getWorkSchedule).mockResolvedValue({
+      weeklyContractHours: 35,
+      weekStartDay: "MONDAY",
+      days: [],
+    });
+    const { onOpenChange } = renderModal({ dismissible: false });
+    await findForm();
+    const user = userEvent.setup();
+
+    expect(screen.queryByRole("button", { name: "Close" })).toBeNull();
+
+    await user.keyboard("{Escape}");
+
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  test("cancellable=false hides the internal Cancel button without affecting the dismissible (X) button", async () => {
+    vi.mocked(getWorkSchedule).mockResolvedValue({
+      weeklyContractHours: 35,
+      weekStartDay: "MONDAY",
+      days: [],
+    });
+    renderModal({ cancellable: false });
+    await findForm();
+
+    expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
+    // `dismissible` (default true) is a separate prop — the X stays.
+    expect(screen.getByRole("button", { name: "Close" })).toBeDefined();
   });
 });

@@ -9,15 +9,18 @@ import { apiFetch } from "./client";
 /**
  * Shape returned by `GET /auth/me` (see `apps/api/src/auth/auth.controller.ts`).
  * `role` mirrors the Prisma `Role` enum (`apps/api/prisma/schema.prisma`:
- * `USER` | `ADMIN`).
+ * `USER` | `ADMIN`). `firstName`/`lastName`/`email` are `string | null`, not
+ * `string` — `apps/api/prisma/schema.prisma`'s `User` model has them
+ * nullable (`firstName String?`, `lastName String?`, `email String? @unique`):
+ * a brand-new pre-onboarding user genuinely has `firstName: null` etc. here.
  */
 export interface AuthUser {
   id: string;
   username: string;
   role: "USER" | "ADMIN";
-  firstName: string;
-  lastName: string;
-  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
   onboardingCompletedAt: string | null;
 }
 

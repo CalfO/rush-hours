@@ -40,5 +40,18 @@
     "loading": "Chargement de votre semaine de travail…",
     "loadError": "Impossible de charger votre semaine de travail. Veuillez réessayer.",
     "saveError": "Impossible d'enregistrer votre semaine de travail. Veuillez réessayer."
+  },
+  "profile": {
+    "title": "Mon profil",
+    "firstNameLabel": "Prénom",
+    "lastNameLabel": "Nom",
+    "emailLabel": "E-mail",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "saveError": "Impossible d'enregistrer votre profil. Veuillez réessayer."
+  },
+  "onboarding": {
+    "continue": "Continuer",
+    "stepIndicator": "Étape {{current}} sur {{total}}"
   }
 }
