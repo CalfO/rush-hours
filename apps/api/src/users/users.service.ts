@@ -127,30 +127,34 @@ export class UsersService {
   }
 
   /**
-   * §5.4 `PUT /users/me/reference-week` — full replace, same two-step pattern as
-   * `replaceWorkSchedule` (prisma-best-practices §3: interactive transaction since
-   * the delete and the create must commit atomically as one full replace).
-   * §5.4 also requires rejecting (400) any `weekday` in the body that isn't part of
-   * the user's *current* `WorkingDaySchedule` — a reference week only ever covers
-   * working days at the time it's saved (spec §5.1).
+   * §5.4 `PUT /users/me/reference-week` — full replace, same interactive-transaction
+   * pattern as `replaceWorkSchedule` (prisma-best-practices §3): the validation read
+   * and the delete+create write must happen atomically inside one transaction, using
+   * `tx` throughout, or a concurrent `PUT /users/me/work-schedule` could shrink the
+   * user's `WorkingDaySchedule` between the read and the write (TOCTOU), letting a
+   * now-invalid weekday slip through. §5.4 requires rejecting (400) any `weekday` in
+   * the body that isn't part of the user's *current* `WorkingDaySchedule` — a
+   * reference week only ever covers working days at the time it's saved (spec §5.1).
+   * Throwing from inside the `$transaction` callback aborts/rolls back the write, so
+   * an invalid weekday still persists nothing, same guarantee as before.
    */
   async replaceReferenceWeek(userId: string, dto: ReferenceWeekDto) {
-    const workingDays = await this.prisma.workingDaySchedule.findMany({
-      where: { userId },
-      select: { weekday: true },
-    });
-    const workingWeekdays = new Set(workingDays.map((day) => day.weekday));
-    const invalidWeekdays = dto
-      .map((day) => day.weekday)
-      .filter((weekday) => !workingWeekdays.has(weekday));
-
-    if (invalidWeekdays.length > 0) {
-      throw new BadRequestException(
-        `Reference week days must be part of the current work schedule: ${invalidWeekdays.join(", ")}`,
-      );
-    }
-
     await this.prisma.$transaction(async (tx) => {
+      const workingDays = await tx.workingDaySchedule.findMany({
+        where: { userId },
+        select: { weekday: true },
+      });
+      const workingWeekdays = new Set(workingDays.map((day) => day.weekday));
+      const invalidWeekdays = dto
+        .map((day) => day.weekday)
+        .filter((weekday) => !workingWeekdays.has(weekday));
+
+      if (invalidWeekdays.length > 0) {
+        throw new BadRequestException(
+          `Reference week days must be part of the current work schedule: ${invalidWeekdays.join(", ")}`,
+        );
+      }
+
       await tx.referenceWeekEntry.deleteMany({ where: { userId } });
       await tx.referenceWeekEntry.createMany({
         data: dto.map((day) => ({ ...day, userId })),

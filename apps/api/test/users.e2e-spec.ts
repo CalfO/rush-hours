@@ -435,22 +435,30 @@ describe("Users (e2e)", () => {
         .send(days)
         .expect(200);
 
-      expect(putResponse.body.exists).toBe(true);
-      expect(putResponse.body.days).toHaveLength(3);
+      const putBody = putResponse.body as {
+        exists: boolean;
+        days: unknown[];
+      };
+      expect(putBody.exists).toBe(true);
+      expect(putBody.days).toHaveLength(3);
 
       const getResponse = await request(app.getHttpServer())
         .get("/users/me/reference-week")
         .set("Cookie", cookie)
         .expect(200);
 
-      expect(getResponse.body.exists).toBe(true);
-      const getDays = getResponse.body.days as Array<Record<string, unknown>>;
+      const getBody = getResponse.body as {
+        exists: boolean;
+        days: Array<Record<string, unknown>>;
+      };
+      expect(getBody.exists).toBe(true);
+      const getDays = getBody.days;
       expect(getDays).toHaveLength(3);
-      expect(
-        getDays
-          .map((d) => d.weekday)
-          .sort(),
-      ).toEqual(["FRIDAY", "MONDAY", "WEDNESDAY"]);
+      expect(getDays.map((d) => d.weekday).sort()).toEqual([
+        "FRIDAY",
+        "MONDAY",
+        "WEDNESDAY",
+      ]);
       for (const day of days) {
         const persisted = getDays.find((d) => d.weekday === day.weekday);
         expect(persisted).toMatchObject({
@@ -495,7 +503,10 @@ describe("Users (e2e)", () => {
         .set("Cookie", cookie)
         .expect(200);
 
-      const getDays = getResponse.body.days as Array<Record<string, unknown>>;
+      const getBody = getResponse.body as {
+        days: Array<Record<string, unknown>>;
+      };
+      const getDays = getBody.days;
       expect(getDays).toHaveLength(2);
       expect(getDays.map((d) => d.weekday).sort()).toEqual([
         "MONDAY",
@@ -532,7 +543,10 @@ describe("Users (e2e)", () => {
         .set("Cookie", cookie)
         .expect(200);
 
-      const getDays = getResponse.body.days as Array<Record<string, unknown>>;
+      const getBody = getResponse.body as {
+        days: Array<Record<string, unknown>>;
+      };
+      const getDays = getBody.days;
       expect(getDays).toHaveLength(2);
       expect(getDays.map((d) => d.weekday).sort()).toEqual([
         "MONDAY",
@@ -610,8 +624,9 @@ describe("Users (e2e)", () => {
         .get("/users/me/reference-week")
         .set("Cookie", userA.cookie)
         .expect(200);
-      expect(getA.body.exists).toBe(true);
-      expect(getA.body.days).toHaveLength(2);
+      const getABody = getA.body as { exists: boolean; days: unknown[] };
+      expect(getABody.exists).toBe(true);
+      expect(getABody.days).toHaveLength(2);
     });
 
     it("§5.4: returns 401 without a session on all three routes", async () => {
