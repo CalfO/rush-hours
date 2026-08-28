@@ -6,16 +6,31 @@ import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended"
 import globals from "globals";
 
 export default tseslint.config(
-  { ignores: ["dist", "eslint.config.mjs"] },
+  {
+    ignores: [
+      "dist",
+      "eslint.config.mjs",
+      "tailwind.config.js",
+      "postcss.config.js",
+    ],
+  },
   eslint.configs.recommended,
-  ...tseslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
   {
     files: ["**/*.{ts,tsx}"],
-    languageOptions: { globals: { ...globals.browser } },
+    languageOptions: {
+      globals: { ...globals.browser },
+      sourceType: "module",
+      parserOptions: {
+        project: ["./tsconfig.json", "./tsconfig.node.json"],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     plugins: { "react-hooks": reactHooks, "react-refresh": reactRefresh },
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": "warn",
+      "@typescript-eslint/no-floating-promises": "warn",
     },
   },
   eslintPluginPrettierRecommended,

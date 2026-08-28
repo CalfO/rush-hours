@@ -1,0 +1,9 @@
+{
+  "app": {
+    "title": "RushHours"
+  },
+  "nav": {
+    "entry": "Saisie",
+    "analytics": "Analyses"
+  }
+}

@@ -4,7 +4,7 @@ description: PrimeReact v11 component usage for this repo's frontend (apps/web/*
 license: MIT
 metadata:
   author: rush-hours (derived from PrimeReact's own llms-full.txt export, MIT-licensed docs)
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # PrimeReact v11 — apps/web
@@ -36,9 +36,7 @@ npx shadcn@latest add https://primereact.dev/r/<component>.json
 
 This requires a `components.json` (shadcn config) at the `apps/web` root and Tailwind already configured — both are one-time setup, not per-component. Works with plain Vite (not Next.js-only).
 
-**Mandatory adaptation step — this repo is JS/JSX only, no TypeScript** (`CLAUDE.md`): the CLI generates `.tsx` with type annotations. After adding a component, strip the types and rename to `.jsx` before using it — don't leave generated `.tsx` files in `apps/web/src`, and don't add a TypeScript toolchain to `apps/web` just to accommodate them.
-
-Once copied, the file is ordinary project source — restyle it directly with Tailwind classes for the Material-flat look (`.claude/skills/react-best-practices` and the design tokens in `prompts/spec/rushhours-full-spec.md` §2.1 apply to it exactly like any other component you'd write by hand).
+The CLI generates `.tsx` directly, which matches this repo's stack (`CLAUDE.md`: `apps/web` is full TypeScript) — no stripping or renaming needed. Once copied, the file is ordinary project source — restyle it directly with Tailwind classes for the Material-flat look (`.claude/skills/react-best-practices` and the design tokens in `prompts/spec/rushhours-full-spec.md` §2.1 apply to it exactly like any other component you'd write by hand), and keep its prop types intact rather than loosening them to `any`.
 
 ## 3. Correct v11 names — check before writing any import
 
@@ -68,7 +66,7 @@ PrimeReact's still-free Primitive components (`ProgressBar`, `Knob`, `MeterGroup
 - **`ToggleButtonGroup`** (heures hebdo quick-pick 35/37/40, §5.5): replaces `SelectButton` 1:1 for this use case.
 - **`Checkbox`** (jours travaillés, §5.5): plain checkboxes, one per weekday — no special v11 gotcha.
 - **`InputNumber`** (répartition des heures par jour, §5.5): use its built-in min/step rather than validating purely in the Zod schema client-side — belt and suspenders, but the Zod schema remains the source of truth per `nestjs-best-practices`/spec §5.5 (sum must equal the weekly total).
-- **`Dialog`** (Paramètres, Ma semaine de travail modals, §5.5/§7.1): this is the compound `Dialog.Root`/`Dialog.Trigger`/`Dialog.Content` API in v11 — build the shared `src/components/ui/Modal.jsx` wrapper mentioned in `prompts/spec/rushhours-full-spec.md` §2.1 on top of this once, reuse everywhere, don't recompose `Dialog.*` ad hoc per modal.
+- **`Dialog`** (Paramètres, Ma semaine de travail modals, §5.5/§7.1): this is the compound `Dialog.Root`/`Dialog.Trigger`/`Dialog.Content` API in v11 — build the shared `src/components/ui/Modal.tsx` wrapper mentioned in `prompts/spec/rushhours-full-spec.md` §2.1 on top of this once, reuse everywhere, don't recompose `Dialog.*` ad hoc per modal.
 - **`Tabs`** (header nav, §7.1): two-tab nav (Saisie/Analyses), route the active tab through `react-router` rather than local component state, so the URL stays the source of truth for navigation.
 - **`ProgressBar`** / **`Knob`** (day/week balance gauge, §7.2): both are unchanged names from v10 — pick whichever visual reads better for a credit/debit gauge; `Knob` is circular (single number), `ProgressBar` is linear (better for showing "X of Y hours" with a clear zero-crossing for credit vs debit — probably the better fit here, but this is a visual call, not a technical constraint).
 - **`Toast`**: unchanged from v10, standard use for save-confirmation/error feedback across the app.
@@ -76,4 +74,4 @@ PrimeReact's still-free Primitive components (`ProgressBar`, `Knob`, `MeterGroup
 ## Sources
 
 - `references/llm-full.md` — PrimeReact's own `llms-full.txt` documentation export (captured from the project's `llm-primereact.md`, MIT-licensed docs), moved here as the exhaustive reference, including the full "Updating to v11" component-name table.
-- Repo conventions: `CLAUDE.md` (root, "no TypeScript" for `apps/web`), `prompts/spec/rushhours-full-spec.md` §2.1/§7 (where these components are used), `.claude/skills/react-best-practices` (applies once a Primitive component is copied into the repo and becomes ordinary project source).
+- Repo conventions: `CLAUDE.md` (root, full TypeScript for `apps/web`), `prompts/spec/rushhours-full-spec.md` §2.1/§7 (where these components are used), `.claude/skills/react-best-practices` (applies once a Primitive component is copied into the repo and becomes ordinary project source).

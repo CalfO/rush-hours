@@ -4,11 +4,20 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
     "@rushhours/domain": "*",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
+    "clsx": "^2.1.1",
+    "i18next": "^26.4.0",
+    "i18next-browser-languagedetector": "^8.2.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.86.0",
+    "react-i18next": "^17.0.12",
+    "react-router-dom": "^6.30.6",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
   },
   "overrides": {
     "@adobe/css-tools": "^4.3.1"
@@ -28,6 +37,7 @@
     "@types/react": "^18.2.79",
     "@types/react-dom": "^18.2.25",
     "@vitejs/plugin-react": "^6.0.1",
+    "autoprefixer": "^10.5.4",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
@@ -35,7 +45,9 @@
     "eslint-plugin-react-refresh": "^0.5.5",
     "globals": "^17.0.0",
     "jsdom": "^26.1.0",
+    "postcss": "^8.5.26",
     "prettier": "^3.4.2",
+    "tailwindcss": "^3.4.19",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0",
     "vite": "^8.0.16",
