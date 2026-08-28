@@ -287,6 +287,7 @@ export function DayForm({
                 >
                   <DatePickerInput
                     aria-label={t("timeEntry.arrivalTimeLabel")}
+                    placeholder={t("timeEntry.timePlaceholder")}
                   />
                   <DatePickerPortal>
                     <DatePickerPositioner>
@@ -326,6 +327,7 @@ export function DayForm({
                 >
                   <DatePickerInput
                     aria-label={t("timeEntry.departureTimeLabel")}
+                    placeholder={t("timeEntry.timePlaceholder")}
                   />
                   <DatePickerPortal>
                     <DatePickerPositioner>
@@ -374,6 +376,7 @@ export function DayForm({
                 >
                   <DatePickerInput
                     aria-label={t("timeEntry.lunchBreakStartLabel")}
+                    placeholder={t("timeEntry.timePlaceholder")}
                   />
                   <DatePickerPortal>
                     <DatePickerPositioner>
@@ -422,6 +425,7 @@ export function DayForm({
                 >
                   <DatePickerInput
                     aria-label={t("timeEntry.lunchBreakEndLabel")}
+                    placeholder={t("timeEntry.timePlaceholder")}
                   />
                   <DatePickerPortal>
                     <DatePickerPositioner>

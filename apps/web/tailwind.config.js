@@ -79,6 +79,16 @@ export default {
       borderRadius: {
         DEFAULT: "0.375rem",
       },
+      // Tailwind's default spacing scale jumps from `4` to `5` (no `.5`
+      // fractional keys past `3.5`) — the shadcn-generated Primitive
+      // components (src/components/ui/dialog.tsx, checkbox.tsx, avatar.tsx)
+      // use `4.5`/`10.5`, which without this silently produce no CSS rule at
+      // all (same defect class as the `surface` palette gap above: a class
+      // referencing a non-existent scale key is dropped, not approximated).
+      spacing: {
+        4.5: "1.125rem",
+        10.5: "2.625rem",
+      },
     },
   },
   plugins: [primeui],
