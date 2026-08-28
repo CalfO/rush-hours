@@ -1,18 +1,9 @@
-import { createBrowserRouter, Outlet } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import TimeEntryPage from "./pages/TimeEntryPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
-
-/**
- * Pathless wrapper for every route that will require an authenticated
- * session. Currently a plain passthrough — step 7 replaces this element
- * with a real `<RequireAuth>` guard without needing to restructure the
- * route tree.
- */
-function AppLayout() {
-  return <Outlet />;
-}
+import { RequireAuth } from "./auth/RequireAuth";
 
 export const router = createBrowserRouter([
   {
@@ -20,7 +11,7 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    element: <AppLayout />,
+    element: <RequireAuth />,
     children: [
       { path: "/", element: <TimeEntryPage /> },
       { path: "/analytics", element: <AnalyticsPage /> },

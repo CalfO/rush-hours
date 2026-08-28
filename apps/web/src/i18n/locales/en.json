@@ -5,5 +5,15 @@
   "nav": {
     "entry": "Time entry",
     "analytics": "Analytics"
+  },
+  "auth": {
+    "title": "Login",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "user or admin",
+    "continue": "Continue",
+    "offerRegisterMessage": "No passkey is enrolled for this account yet.",
+    "offerRegisterButton": "Create your passkey for this account",
+    "genericError": "Something went wrong. Please try again.",
+    "ceremonyError": "The operation was cancelled or failed. Please try again."
   }
 }

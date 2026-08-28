@@ -5,5 +5,15 @@
   "nav": {
     "entry": "Saisie",
     "analytics": "Analyses"
+  },
+  "auth": {
+    "title": "Connexion",
+    "usernameLabel": "Nom d'utilisateur",
+    "usernamePlaceholder": "user ou admin",
+    "continue": "Continuer",
+    "offerRegisterMessage": "Aucun passkey n'est encore associé à ce compte.",
+    "offerRegisterButton": "Créer votre passkey pour ce compte",
+    "genericError": "Une erreur est survenue. Veuillez réessayer.",
+    "ceremonyError": "L'opération a été annulée ou a échoué. Veuillez réessayer."
   }
 }

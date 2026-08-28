@@ -6,6 +6,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
     "@rushhours/domain": "*",
+    "@simplewebauthn/browser": "^13.3.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
     "clsx": "^2.1.1",
