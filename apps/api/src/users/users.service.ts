@@ -1,8 +1,13 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { WorkScheduleDto } from "./dto/work-schedule.dto";
+import { ReferenceWeekDto } from "./dto/reference-week.dto";
 
 const WORK_SCHEDULE_SELECT = {
   weeklyContractHours: true,
@@ -10,6 +15,14 @@ const WORK_SCHEDULE_SELECT = {
   workingDaySchedules: {
     select: { weekday: true, targetMinutes: true },
   },
+} as const;
+
+const REFERENCE_WEEK_SELECT = {
+  weekday: true,
+  arrivalMinutes: true,
+  departureMinutes: true,
+  lunchBreakStartMinutes: true,
+  lunchBreakEndMinutes: true,
 } as const;
 
 @Injectable()
@@ -101,5 +114,59 @@ export class UsersService {
       weekStartDay: updated.weekStartDay,
       days: updated.workingDaySchedules,
     };
+  }
+
+  /** §5.4 `GET /users/me/reference-week`. */
+  async getReferenceWeek(userId: string) {
+    const days = await this.prisma.referenceWeekEntry.findMany({
+      where: { userId },
+      select: REFERENCE_WEEK_SELECT,
+    });
+
+    return { exists: days.length > 0, days };
+  }
+
+  /**
+   * §5.4 `PUT /users/me/reference-week` — full replace, same two-step pattern as
+   * `replaceWorkSchedule` (prisma-best-practices §3: interactive transaction since
+   * the delete and the create must commit atomically as one full replace).
+   * §5.4 also requires rejecting (400) any `weekday` in the body that isn't part of
+   * the user's *current* `WorkingDaySchedule` — a reference week only ever covers
+   * working days at the time it's saved (spec §5.1).
+   */
+  async replaceReferenceWeek(userId: string, dto: ReferenceWeekDto) {
+    const workingDays = await this.prisma.workingDaySchedule.findMany({
+      where: { userId },
+      select: { weekday: true },
+    });
+    const workingWeekdays = new Set(workingDays.map((day) => day.weekday));
+    const invalidWeekdays = dto
+      .map((day) => day.weekday)
+      .filter((weekday) => !workingWeekdays.has(weekday));
+
+    if (invalidWeekdays.length > 0) {
+      throw new BadRequestException(
+        `Reference week days must be part of the current work schedule: ${invalidWeekdays.join(", ")}`,
+      );
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.referenceWeekEntry.deleteMany({ where: { userId } });
+      await tx.referenceWeekEntry.createMany({
+        data: dto.map((day) => ({ ...day, userId })),
+      });
+    });
+
+    return { exists: dto.length > 0, days: dto };
+  }
+
+  /**
+   * §5.4/§5.6 `DELETE /users/me/reference-week` — idempotent, no-op if already
+   * empty. Return shape mirrors the existing `DELETE /time-entries/:date`
+   * precedent (`TimeEntriesService.remove`, `{ success: true }`).
+   */
+  async deleteReferenceWeek(userId: string): Promise<{ success: true }> {
+    await this.prisma.referenceWeekEntry.deleteMany({ where: { userId } });
+    return { success: true };
   }
 }

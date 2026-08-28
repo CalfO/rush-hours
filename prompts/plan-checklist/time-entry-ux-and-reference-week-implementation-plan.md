@@ -17,10 +17,10 @@
 
 ## Checklist (ordre du §10 du spec, regroupé en lots ci-dessus)
 
-1. ⬜ **Correctifs directs** — placeholder heure (§2) + bug padding modales (§7, `tailwind.config.js` spacing scale).
-2. ⬜ **Lot A — Prisma** — `ReferenceWeekEntry` (§5.2), migration.
-3. ⬜ **Lot A — `packages/domain`** — `reference-week.schema.ts` (§5.3), tests.
-4. ⬜ **Lot A — API** — endpoints `reference-week` (§5.4) + validation weekday ⊆ WorkingDaySchedule, tests unitaires + e2e.
+1. ✅ **Correctifs directs** — placeholder heure (§2) + bug padding modales (§7, `tailwind.config.js` spacing scale). Commit `25c7d29`. Vérifié : CSS buildé contient bien `.p-4\.5{padding:1.125rem}`/`.px-4\.5{...}`, 80 tests web verts, lint/build propres.
+2. ✅ **Lot A — Prisma** — `ReferenceWeekEntry` (§5.2), migration `20260828192440_add_reference_week_entry`.
+3. ✅ **Lot A — `packages/domain`** — `reference-week.schema.ts` (§5.3) + `reference-week.schema.spec.ts` (42 tests domain au total, tous verts).
+4. 🟡 **Lot A — API** — endpoints `reference-week` (§5.4) + validation weekday ⊆ WorkingDaySchedule implémentés dans `users.service.ts`/`users.controller.ts` par `senior-developer`, build/lint/test api verts (44 tests). **Pas encore de tests dev-tester (e2e) ni de review** — prochaine étape.
 5. ⬜ **Lot B — `DayCard`/`WeekCarousel`** (§3) — extraction, nouveau composant, remontée du date-picker.
 6. ⬜ **Lot B — grille d'heures en popover** (§4.2).
 7. ⬜ **Lot B — sélecteur de langue** (§6) — `ToggleButtonGroup`.

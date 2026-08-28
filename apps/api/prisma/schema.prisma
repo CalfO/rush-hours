@@ -40,9 +40,10 @@ model User {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  credentials         Credential[]
+  credentials          Credential[]
   timeEntries          TimeEntry[]
   workingDaySchedules   WorkingDaySchedule[]
+  referenceWeekEntries  ReferenceWeekEntry[]
   webauthnChallenges    WebauthnChallenge[]
 
   @@map("users")
@@ -60,6 +61,27 @@ model WorkingDaySchedule {
 
   @@unique([userId, weekday])
   @@map("working_day_schedules")
+}
+
+// Semaine de référence (spec `time-entry-ux-and-reference-week.md` §5) : un jeu d'heures type
+// par jour de semaine, indexé par `Weekday` (pas par `Date`) — une seule semaine de référence par
+// utilisateur, remplacée intégralement via `deleteMany` + `createMany` (même motif que
+// WorkingDaySchedule/replaceWorkSchedule), jamais mise à jour ligne par ligne.
+model ReferenceWeekEntry {
+  id                     String   @id @default(uuid())
+  weekday                Weekday
+  arrivalMinutes         Int // minute du jour (0-1439), heure murale locale — pas de fuseau
+  departureMinutes       Int
+  lunchBreakStartMinutes Int
+  lunchBreakEndMinutes   Int
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekday])
+  @@map("reference_week_entries")
 }
 
 model Credential {

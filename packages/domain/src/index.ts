@@ -6,3 +6,9 @@ export {
   type WorkScheduleInput,
 } from "./work-schedule.schema";
 export { profileSchema, type ProfileInput } from "./profile.schema";
+export {
+  referenceWeekDaySchema,
+  type ReferenceWeekDayInput,
+  referenceWeekSchema,
+  type ReferenceWeekInput,
+} from "./reference-week.schema";

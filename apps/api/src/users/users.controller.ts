@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Patch, Put } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Patch, Put } from "@nestjs/common";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { SessionPayload } from "../auth/session-payload.interface";
 import { UsersService } from "./users.service";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { WorkScheduleDto } from "./dto/work-schedule.dto";
+import { ReferenceWeekDto } from "./dto/reference-week.dto";
 
 /**
  * §6 — all routes here require a session; the global `AuthGuard` (registered via
@@ -33,5 +34,23 @@ export class UsersController {
     @Body() body: WorkScheduleDto,
   ) {
     return this.usersService.replaceWorkSchedule(user.sub, body);
+  }
+
+  @Get("me/reference-week")
+  getReferenceWeek(@CurrentUser() user: SessionPayload) {
+    return this.usersService.getReferenceWeek(user.sub);
+  }
+
+  @Put("me/reference-week")
+  replaceReferenceWeek(
+    @CurrentUser() user: SessionPayload,
+    @Body() body: ReferenceWeekDto,
+  ) {
+    return this.usersService.replaceReferenceWeek(user.sub, body);
+  }
+
+  @Delete("me/reference-week")
+  deleteReferenceWeek(@CurrentUser() user: SessionPayload) {
+    return this.usersService.deleteReferenceWeek(user.sub);
   }
 }
