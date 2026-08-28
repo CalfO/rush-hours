@@ -397,6 +397,14 @@ function DatePickerHourGrid() {
   const { t } = useTranslation();
   const datepicker = useDatePickerContext();
   const [open, setOpen] = React.useState(false);
+  const pendingSync = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(
+    () => () => {
+      if (pendingSync.current !== null) clearTimeout(pendingSync.current);
+    },
+    [],
+  );
 
   function pick(hour: number) {
     const current = (datepicker?.props.value as Date | null) ?? new Date();
@@ -439,14 +447,19 @@ function DatePickerHourGrid() {
     // second dispatch, incrementing the hour after a grid pick jumped to
     // an unrelated value instead of picked+1; with it, the picked hour is
     // preserved and increments/decrements by exactly one step.
-    window.setTimeout(() => {
+    pendingSync.current = setTimeout(() => {
+      pendingSync.current = null;
       onValueChange?.({ value: new Date(next) });
     }, 0);
   }
 
   return (
     <Popover open={open} onOpenChange={(event) => setOpen(!!event.value)}>
-      <PopoverTrigger type="button" className={hourTriggerClass}>
+      <PopoverTrigger
+        type="button"
+        className={hourTriggerClass}
+        aria-label={t("timeEntry.hourGridLabel")}
+      >
         <PRDatePicker.Hour />
       </PopoverTrigger>
       <PopoverPortal>

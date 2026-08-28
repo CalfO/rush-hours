@@ -135,8 +135,9 @@ describe("DayCard (spec §4.1/§4.2)", () => {
     await user.click(getTimeField("Arrival"));
     await screen.findByRole("dialog");
 
-    // The hour value itself (currently "08") is the grid's own trigger.
-    const hourTrigger = screen.getByRole("button", { name: "08" });
+    // The hour value itself (currently "08") is the grid's own trigger,
+    // accessibly named via its aria-label rather than its visible digits.
+    const hourTrigger = screen.getByRole("button", { name: "Choose hour" });
     await user.click(hourTrigger);
 
     const grid = await screen.findByRole("listbox", { name: "Choose hour" });
@@ -162,7 +163,7 @@ describe("DayCard (spec §4.1/§4.2)", () => {
     await user.click(getTimeField("Arrival"));
     await screen.findByRole("dialog");
 
-    await user.click(screen.getByRole("button", { name: "08" }));
+    await user.click(screen.getByRole("button", { name: "Choose hour" }));
     await screen.findByRole("listbox", { name: "Choose hour" });
     await user.click(screen.getByRole("option", { name: "14" }));
 
