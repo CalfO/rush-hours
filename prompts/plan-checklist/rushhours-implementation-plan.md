@@ -45,16 +45,19 @@
     - Tests ajoutés/corrigés par `dev-tester` : `src/pages/TimeEntryPage.test.tsx`, fixtures `src/App.test.tsx` et `src/components/AppLayout.test.tsx`. Couverture §7.2 : formulaire et sauvegarde, bornes pause 12h–14h, soldes jour/semaine, couleurs calendrier, sélection de date et navigation mensuelle.
     - `npm run test --workspace web -- --run` : 72 tests verts ; `npm run typecheck --workspace web`, `npm run lint --workspace web` et `npm run build --workspace web` verts (3 warnings Fast Refresh préexistants). Vérification supplémentaire en `TZ=America/Los_Angeles` effectuée sur le test de la vue.
     - Review finale : 0 finding bloquant après corrections.
-12. 🚧 **Front — Vue Analyses** (`/analytics`) — architecture préparée ; plan de l'architecte validé, implémentation à réaliser par `senior-developer`. Graphiques SVG/Tailwind faits main (§7.3, pas de lib de charting externe).
+12. ✅ **Front — Vue Analyses** (`/analytics`) — Commitée `15a17be`. Implémentation, tests spec-as-test et revue terminés. Graphiques SVG/Tailwind faits main (§7.3, pas de lib de charting externe).
+    - `AnalyticsPage` gère les presets mois/semaine/plage libre, les bornes UTC, les états loading/error/empty et ignore les réponses obsolètes.
+    - Ajout de `getAnalytics`, des helpers de transformation et des graphiques SVG accessibles pour les séries journalières, le cumul de balance et les 8 dernières semaines.
+    - Tests web : 80 tests verts ; typecheck, lint et build verts (3 warnings Fast Refresh préexistants). Review finale : 0 finding bloquant.
 13. ✅ **Qualité** — `apps/web` et `apps/api` ont chacun `lint`/`typecheck` + un `prebuild` qui lance le lint (et le typecheck côté web) — §8.2 du spec respecté dans les deux workspaces. Commit `9bbcbe9`. Pas de `.prettierrc` racine (accepté, la config par défaut suffit selon le spec). Point encore ouvert, non bloquant : `apps/web/eslint.config.mjs` utilise `tseslint.configs.recommended` (pas type-aware) contrairement à `apps/api` qui utilise `recommendedTypeChecked` — à aligner avant le lot Front Auth (async WebAuthn/`fetch`, `no-floating-promises`).
 14. ⬜ **Vérification manuelle bout en bout** dans le navigateur — bloquée tant que le front (étapes 6-12) n'existe pas.
 
 ## État git actuel
 
 - Branche : `feature/hours-input` (locale ahead de 11 commits sur `origin/feature/hours-input` — pas encore pushé).
- - Dernier commit : `f2cce59 feat(web): implement time entry view` (au-dessus de `b8b49f4` et des lots précédents).
+ - Dernier commit : `15a17be feat(web): add analytics view` (au-dessus de `f2cce59`, `46d8996` et des lots précédents).
  - Working tree : modification checklist uniquement, à commiter dans le commit documentaire suivant.
- - Étape 11 : implémentée, testée, reviewée et commitée (`f2cce59`).
+ - Étapes 11 et 12 : implémentées, testées, reviewées et commitées (`f2cce59`/`15a17be`).
 
 ## Review reçue (commit `b8b49f4`) — 0 finding bloquant
 
@@ -110,7 +113,6 @@ Le reviewer a rendu son verdict (build/test/lint/e2e re-vérifiés indépendamme
 
 ## Prochaines étapes immédiates
 
-1. Implémenter le lot **Front — Vue Analyses** (étape 12, §7.3) via senior-developer selon le plan d'architecture.
-2. Faire tester et reviewer l'étape 12, mettre à jour cette checklist, puis la commiter.
-3. Effectuer la vérification manuelle bout en bout (étape 14) après les étapes front restantes.
-4. Penser à `git push` la branche `feature/hours-input` quand l'utilisateur le demande.
+1. Effectuer la vérification manuelle bout en bout (étape 14) : passkey, onboarding, semaine de travail, saisie, couleurs, analyses et rendu Material flat.
+2. Mettre à jour cette checklist et commiter l'état de vérification manuelle.
+3. Penser à `git push` la branche `feature/hours-input` quand l'utilisateur le demande.
