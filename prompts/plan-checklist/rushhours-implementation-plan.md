@@ -45,7 +45,7 @@
     - Tests ajoutés/corrigés par `dev-tester` : `src/pages/TimeEntryPage.test.tsx`, fixtures `src/App.test.tsx` et `src/components/AppLayout.test.tsx`. Couverture §7.2 : formulaire et sauvegarde, bornes pause 12h–14h, soldes jour/semaine, couleurs calendrier, sélection de date et navigation mensuelle.
     - `npm run test --workspace web -- --run` : 72 tests verts ; `npm run typecheck --workspace web`, `npm run lint --workspace web` et `npm run build --workspace web` verts (3 warnings Fast Refresh préexistants). Vérification supplémentaire en `TZ=America/Los_Angeles` effectuée sur le test de la vue.
     - Review finale : 0 finding bloquant après corrections.
-12. ⬜ **Front — Vue Analyses** (`/analytics`) — graphiques SVG/Tailwind faits main (§7.3, pas de lib de charting externe).
+12. 🚧 **Front — Vue Analyses** (`/analytics`) — architecture préparée ; plan de l'architecte validé, implémentation à réaliser par `senior-developer`. Graphiques SVG/Tailwind faits main (§7.3, pas de lib de charting externe).
 13. ✅ **Qualité** — `apps/web` et `apps/api` ont chacun `lint`/`typecheck` + un `prebuild` qui lance le lint (et le typecheck côté web) — §8.2 du spec respecté dans les deux workspaces. Commit `9bbcbe9`. Pas de `.prettierrc` racine (accepté, la config par défaut suffit selon le spec). Point encore ouvert, non bloquant : `apps/web/eslint.config.mjs` utilise `tseslint.configs.recommended` (pas type-aware) contrairement à `apps/api` qui utilise `recommendedTypeChecked` — à aligner avant le lot Front Auth (async WebAuthn/`fetch`, `no-floating-promises`).
 14. ⬜ **Vérification manuelle bout en bout** dans le navigateur — bloquée tant que le front (étapes 6-12) n'existe pas.
 
@@ -110,7 +110,7 @@ Le reviewer a rendu son verdict (build/test/lint/e2e re-vérifiés indépendamme
 
 ## Prochaines étapes immédiates
 
-1. Commencer le lot **Front — Vue Analyses** (étape 12, §7.3) via architect puis senior-developer.
+1. Implémenter le lot **Front — Vue Analyses** (étape 12, §7.3) via senior-developer selon le plan d'architecture.
 2. Faire tester et reviewer l'étape 12, mettre à jour cette checklist, puis la commiter.
 3. Effectuer la vérification manuelle bout en bout (étape 14) après les étapes front restantes.
 4. Penser à `git push` la branche `feature/hours-input` quand l'utilisateur le demande.
