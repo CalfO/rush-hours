@@ -1,7 +1,22 @@
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, expect, test, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import App from "./App";
 import type { AuthUser } from "./api/auth";
+import i18n from "./i18n/config";
+
+vi.mock("./api/users", () => ({
+  getWorkSchedule: vi.fn(),
+  putWorkSchedule: vi.fn(),
+  updateProfile: vi.fn(),
+}));
+vi.mock("./api/time-entries", () => ({
+  getSummary: vi.fn(),
+  listMonth: vi.fn(),
+  upsertTimeEntry: vi.fn(),
+}));
+
+import { getWorkSchedule } from "./api/users";
+import { getSummary, listMonth } from "./api/time-entries";
 
 /**
  * Spec §7 (lines 273-282): "/" is the Vue Saisie, and (last line) "Toutes
@@ -35,7 +50,31 @@ const authenticatedOnboardedUser: AuthUser = {
 
 let fetchMock: ReturnType<typeof vi.fn>;
 
+beforeAll(async () => {
+  if (!i18n.isInitialized) {
+    await new Promise<void>((resolve) => {
+      i18n.on("initialized", () => resolve());
+    });
+  }
+});
+
 beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(getWorkSchedule).mockResolvedValue({
+    weeklyContractHours: 35,
+    weekStartDay: "MONDAY",
+    days: [],
+  });
+  vi.mocked(getSummary).mockResolvedValue({
+    days: [],
+    weeks: [],
+    total: {
+      workedMinutes: 0,
+      targetMinutes: 0,
+      balanceMinutes: 0,
+    },
+  });
+  vi.mocked(listMonth).mockResolvedValue([]);
   fetchMock = vi.fn().mockResolvedValue({
     ok: true,
     status: 200,

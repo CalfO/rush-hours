@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { PrimeReactProvider } from "@primereact/core";
@@ -49,6 +49,14 @@ vi.mock("../api/users", () => ({
   putWorkSchedule: vi.fn(),
   updateProfile: vi.fn(),
 }));
+vi.mock("../api/time-entries", () => ({
+  getSummary: vi.fn(),
+  listMonth: vi.fn(),
+  upsertTimeEntry: vi.fn(),
+}));
+
+import { getWorkSchedule } from "../api/users";
+import { getSummary, listMonth } from "../api/time-entries";
 
 const onboardedUser: AuthUser = {
   id: "u1",
@@ -64,6 +72,25 @@ const notYetOnboardedUser: AuthUser = {
   ...onboardedUser,
   onboardingCompletedAt: null,
 };
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(getWorkSchedule).mockResolvedValue({
+    weeklyContractHours: 35,
+    weekStartDay: "MONDAY",
+    days: [],
+  });
+  vi.mocked(getSummary).mockResolvedValue({
+    days: [],
+    weeks: [],
+    total: {
+      workedMinutes: 0,
+      targetMinutes: 0,
+      balanceMinutes: 0,
+    },
+  });
+  vi.mocked(listMonth).mockResolvedValue([]);
+});
 
 beforeAll(async () => {
   if (!i18n.isInitialized) {
@@ -133,7 +160,7 @@ describe("AppLayout placement (spec §7.1/§7)", () => {
     expect(screen.queryByRole("banner")).toBeNull();
   });
 
-  test("the header renders for / (Vue Saisie), for an authenticated, onboarded user", () => {
+  test("the header renders for / (Vue Saisie), for an authenticated, onboarded user", async () => {
     vi.mocked(useAuth).mockReturnValue({
       status: "authenticated",
       user: onboardedUser,
@@ -143,11 +170,13 @@ describe("AppLayout placement (spec §7.1/§7)", () => {
 
     renderAt("/");
 
-    expect(screen.getByRole("heading", { name: /time entry/i })).toBeDefined();
+    expect(
+      await screen.findByRole("heading", { name: /time entry/i }),
+    ).toBeDefined();
     expect(screen.getByRole("banner")).toBeDefined();
   });
 
-  test("the header renders for /analytics, for an authenticated, onboarded user", () => {
+  test("the header renders for /analytics, for an authenticated, onboarded user", async () => {
     vi.mocked(useAuth).mockReturnValue({
       status: "authenticated",
       user: onboardedUser,
@@ -157,7 +186,9 @@ describe("AppLayout placement (spec §7.1/§7)", () => {
 
     renderAt("/analytics");
 
-    expect(screen.getByRole("heading", { name: /analytics/i })).toBeDefined();
+    expect(
+      await screen.findByRole("heading", { name: /analytics/i }),
+    ).toBeDefined();
     expect(screen.getByRole("banner")).toBeDefined();
   });
 });

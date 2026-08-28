@@ -59,5 +59,21 @@
     "myWorkSchedule": "Ma semaine de travail",
     "logout": "Déconnexion",
     "languageLabel": "Langue"
+  },
+  "timeEntry": {
+    "dateLabel": "Date",
+    "arrivalTimeLabel": "Arrivée",
+    "departureTimeLabel": "Départ",
+    "lunchBreakStartLabel": "Début pause déjeuner",
+    "lunchBreakEndLabel": "Fin pause déjeuner",
+    "save": "Enregistrer",
+    "saveError": "Impossible d'enregistrer cette journée. Veuillez réessayer.",
+    "loading": "Chargement…",
+    "loadError": "Impossible de charger vos saisies. Veuillez réessayer.",
+    "dayIndicatorLabel": "Solde du jour",
+    "weekIndicatorLabel": "Solde de la semaine",
+    "monthTotalLabel": "Total du mois",
+    "previousMonth": "Mois précédent",
+    "nextMonth": "Mois suivant"
   }
 }

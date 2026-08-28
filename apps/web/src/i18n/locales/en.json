@@ -59,5 +59,21 @@
     "myWorkSchedule": "My work week",
     "logout": "Log out",
     "languageLabel": "Language"
+  },
+  "timeEntry": {
+    "dateLabel": "Date",
+    "arrivalTimeLabel": "Arrival",
+    "departureTimeLabel": "Departure",
+    "lunchBreakStartLabel": "Lunch break start",
+    "lunchBreakEndLabel": "Lunch break end",
+    "save": "Save",
+    "saveError": "Couldn't save this day. Please try again.",
+    "loading": "Loading…",
+    "loadError": "Couldn't load your time entries. Please try again.",
+    "dayIndicatorLabel": "Day balance",
+    "weekIndicatorLabel": "Week balance",
+    "monthTotalLabel": "Month total",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month"
   }
 }
