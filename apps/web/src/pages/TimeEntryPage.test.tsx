@@ -12,6 +12,7 @@ import userEvent from "@testing-library/user-event";
 import { Children, createContext, isValidElement, useContext } from "react";
 import type { ReactElement, ReactNode } from "react";
 import { PrimeReactProvider } from "@primereact/core";
+import { WEEKDAYS } from "@rushhours/domain";
 import TimeEntryPage from "./TimeEntryPage";
 import {
   getSummary,
@@ -277,10 +278,14 @@ beforeEach(async () => {
     logout: vi.fn(),
   });
 
+  // All 7 days configured as working days -- these tests exercise the day-
+  // entry form itself, not the working-days filtering behavior (covered by
+  // `WeekCarousel.test.tsx`), so every day of the week must still get a
+  // card here.
   vi.mocked(getWorkSchedule).mockResolvedValue({
     weeklyContractHours: 35,
     weekStartDay: "MONDAY",
-    days: [],
+    days: WEEKDAYS.map((weekday) => ({ weekday, targetMinutes: 300 })),
   });
   vi.mocked(getSummary).mockImplementation((month) =>
     Promise.resolve(monthSummaries[month] ?? emptySummary()),

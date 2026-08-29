@@ -17,6 +17,8 @@ import {
 interface WeekCarouselProps {
   selectedDate: Date; // UTC-midnight — single source of truth, owned by TimeEntryPage
   weekStartDay: Weekday;
+  /** Only these weekdays get a card — configured working days only, per the user's request. */
+  workingWeekdays: Weekday[];
   entriesByDate: Map<string, TimeEntryRecord>;
   /** §5.6/§5.7 — `null` while `AppLayout` hasn't resolved the fetch yet. */
   referenceWeek: ReferenceWeekState | null;
@@ -25,22 +27,31 @@ interface WeekCarouselProps {
 }
 
 /**
- * Spec §3 "Carousel" — 7 `DayCard`s, one per day of `selectedDate`'s week
- * (`weekStartDay`-first, spec §4.5), one page at a time via the PrimeReact
- * `Carousel` Primitive (`loop={false}`, no auto-play, no indicators — spec
- * §3.1). `selectedDate` is never mirrored into local state
+ * Spec §3 "Carousel" — one `DayCard` per *working* day of `selectedDate`'s
+ * week (`weekStartDay`-first, spec §4.5), filtered to `workingWeekdays` —
+ * a non-working day gets no card at all, narrower per-request than the
+ * original spec text (which kept every day of the week free-fillable).
+ * `slidesPerPage={3}`/`align="start"` show three cards at once via the
+ * PrimeReact `Carousel` Primitive (`loop={false}`, no auto-play, no
+ * indicators — spec §3.1); `slide`/`onSlideChange` stay per-*item* (not
+ * per-page-of-3) regardless of `slidesPerPage` — confirmed by reading
+ * `@primereact/headless/carousel`'s own measurement pass, which assigns one
+ * snap point per item — so `activeIndex` below still means what it always
+ * did. `selectedDate` is never mirrored into local state
  * (react-best-practices #2) — `activeIndex` is derived every render, so this
  * component stays a pure function of its props, and a cross-week jump (spec
  * §3.2) needs no special-case code: `days` is recomputed fresh from
  * `selectedDate` on every render. `Prev`/`Next` disable themselves at the
- * 7-card boundary via the primitive's own state, so arriving past day 7
- * never rolls into the next week without extra guard code.
+ * card-count boundary via the primitive's own state, so arriving past the
+ * last working day never rolls into the next week without extra guard code.
  *
- * §5.7 adds a "use the reference week" switch on `days[0]`'s card — always
- * the `weekStartDay` day, per how `getWeekDays`/`getWeekRange` construct the
- * array, no searching needed. `useReferenceWeek` is purely local UI state
- * (nothing above needs to know the switch is on) and resets naturally on
- * remount rather than being persisted.
+ * §5.7 adds a "use the reference week" switch on `days[0]`'s card — the
+ * *first working day* of the week in `weekStartDay` order (not necessarily
+ * `weekStartDay` itself now that non-working days are filtered out — if
+ * `weekStartDay` isn't a working day, it has no card to put the switch on).
+ * `useReferenceWeek` is purely local UI state (nothing above needs to know
+ * the switch is on) and resets naturally on remount rather than being
+ * persisted.
  *
  * `touchedDays` guards the remount-via-`key` idiom below against destroying
  * unsaved input: a card the user has started typing into (RHF's own
@@ -56,6 +67,7 @@ interface WeekCarouselProps {
 export function WeekCarousel({
   selectedDate,
   weekStartDay,
+  workingWeekdays,
   entriesByDate,
   referenceWeek,
   onSelectDate,
@@ -84,9 +96,17 @@ export function WeekCarousel({
     });
   }, []);
 
-  const days = getWeekDays(selectedDate, weekStartDay);
+  const days = getWeekDays(selectedDate, weekStartDay).filter((day) =>
+    workingWeekdays.includes(getWeekdayForDate(day)),
+  );
   const selectedIso = toIsoDate(selectedDate);
   const activeIndex = days.findIndex((day) => toIsoDate(day) === selectedIso);
+
+  if (days.length === 0) {
+    return (
+      <p className="text-sm text-surface-500">{t("timeEntry.noWorkingDays")}</p>
+    );
+  }
 
   return (
     <Carousel
@@ -95,8 +115,8 @@ export function WeekCarousel({
         const day = days[Number(event.value ?? 0)];
         if (day) onSelectDate(day);
       }}
-      slidesPerPage={1}
-      align="center"
+      slidesPerPage={3}
+      align="start"
       loop={false}
     >
       <CarouselContent>
@@ -119,32 +139,40 @@ export function WeekCarousel({
 
           return (
             <CarouselItem key={iso} value={iso}>
-              <DayCard
-                // Same remount idiom `DayCard` already relies on for its own
-                // `date`-keyed remount (see its doc comment): toggling the
-                // switch changes the key only for cards whose prefill state
-                // actually changed, forcing exactly those `DayCard`s to
-                // remount with fresh `defaultValues` computed from the new
-                // `prefillEntry` — not a `reset()`-in-`useEffect` path.
-                key={iso + (eligibleForPrefillKey ? ":ref" : "")}
-                date={day}
-                existingEntry={entriesByDate.get(iso)}
-                prefillEntry={prefillEntry}
-                onSaved={onSaved}
-                onDirtyChange={(dirty) => handleDirtyChange(iso, dirty)}
-              />
-              {index === 0 && referenceWeek?.exists && (
-                <div className="mt-3 flex items-center gap-2">
-                  <ToggleButton
-                    pressed={useReferenceWeek}
-                    onPressedChange={(event) =>
-                      setUseReferenceWeek(event.pressed)
-                    }
-                  >
-                    {t("referenceWeek.useSwitchLabel")}
-                  </ToggleButton>
-                </div>
-              )}
+              <div className="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+                <p className="mb-2 text-sm font-semibold text-surface-800 dark:text-surface-100">
+                  {t(`weekdays.${getWeekdayForDate(day)}`)}{" "}
+                  <span className="font-normal text-surface-500">
+                    {day.getUTCDate()}
+                  </span>
+                </p>
+                <DayCard
+                  // Same remount idiom `DayCard` already relies on for its own
+                  // `date`-keyed remount (see its doc comment): toggling the
+                  // switch changes the key only for cards whose prefill state
+                  // actually changed, forcing exactly those `DayCard`s to
+                  // remount with fresh `defaultValues` computed from the new
+                  // `prefillEntry` — not a `reset()`-in-`useEffect` path.
+                  key={iso + (eligibleForPrefillKey ? ":ref" : "")}
+                  date={day}
+                  existingEntry={entriesByDate.get(iso)}
+                  prefillEntry={prefillEntry}
+                  onSaved={onSaved}
+                  onDirtyChange={(dirty) => handleDirtyChange(iso, dirty)}
+                />
+                {index === 0 && referenceWeek?.exists && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <ToggleButton
+                      pressed={useReferenceWeek}
+                      onPressedChange={(event) =>
+                        setUseReferenceWeek(event.pressed)
+                      }
+                    >
+                      {t("referenceWeek.useSwitchLabel")}
+                    </ToggleButton>
+                  </div>
+                )}
+              </div>
             </CarouselItem>
           );
         })}

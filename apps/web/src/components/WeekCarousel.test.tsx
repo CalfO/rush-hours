@@ -4,7 +4,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PrimeReactProvider } from "@primereact/core";
-import { getWeekdayForDate, type Weekday } from "@rushhours/domain";
+import { getWeekdayForDate, WEEKDAYS, type Weekday } from "@rushhours/domain";
 import { WeekCarousel } from "./WeekCarousel";
 import type { ReferenceWeekState } from "../api/reference-week";
 import type { TimeEntryRecord } from "../api/time-entries";
@@ -163,6 +163,13 @@ beforeEach(() => {
 // ordering is user-driven, not hardcoded to Monday-first.
 const WEEK_START: Weekday = "WEDNESDAY";
 
+// All 7 days configured as working days -- these tests exercise carousel
+// plumbing (paging, active-day sync, the §5.7 switch), not the working-days
+// filtering behavior itself (its own suite below), so every day must still
+// get a card. `Weekday[]` (mutable), not `WEEKDAYS` itself (a readonly
+// tuple) -- matches `WeekCarouselProps.workingWeekdays`'s own type.
+const ALL_WEEKDAYS: Weekday[] = [...WEEKDAYS];
+
 // 2026-08-26 is a Wednesday; the WEDNESDAY-first week it belongs to runs
 // Wed 26 Aug -> Tue 1 Sep.
 const WEEK_DATES = [
@@ -201,6 +208,7 @@ function renderCarousel(selectedIso: string) {
       <WeekCarousel
         selectedDate={new Date(`${selectedIso}T00:00:00.000Z`)}
         weekStartDay={WEEK_START}
+        workingWeekdays={ALL_WEEKDAYS}
         entriesByDate={buildEntries()}
         referenceWeek={null}
         onSelectDate={onSelectDate}
@@ -261,6 +269,7 @@ describe("WeekCarousel (spec §3.1)", () => {
         <WeekCarousel
           selectedDate={new Date(`${WEEK_DATES[1]}T00:00:00.000Z`)}
           weekStartDay={WEEK_START}
+          workingWeekdays={ALL_WEEKDAYS}
           entriesByDate={buildEntries()}
           referenceWeek={null}
           onSelectDate={vi.fn()}
@@ -288,6 +297,7 @@ describe("WeekCarousel (spec §3.1)", () => {
         <WeekCarousel
           selectedDate={new Date("2026-09-02T00:00:00.000Z")}
           weekStartDay={WEEK_START}
+          workingWeekdays={ALL_WEEKDAYS}
           entriesByDate={buildEntries()}
           referenceWeek={null}
           onSelectDate={vi.fn()}
@@ -313,6 +323,73 @@ describe("WeekCarousel (spec §3.1)", () => {
         .getByRole("button", { name: "Previous day" })
         .hasAttribute("disabled"),
     ).toBe(true);
+  });
+});
+
+/**
+ * User follow-up request (post-spec): "afficher la saisie des heures ... sur
+ * des card moins large ... uniquement pour les jours travaillés configuré
+ * pour l'utilisateur" -> a day that isn't in `workingWeekdays` gets no card
+ * at all, rather than the original spec's every-day-is-free-fillable
+ * behavior. `workingWeekdays` is deliberately unordered and a subset of
+ * `WEEK_DATES` below, to prove the component both filters *and* re-orders to
+ * `weekStartDay` order rather than trusting the caller's own array order.
+ */
+describe("WeekCarousel working-days filtering", () => {
+  test("only renders a card for configured working days, in weekStartDay order", () => {
+    const workingWeekdays: Weekday[] = ["MONDAY", "WEDNESDAY", "FRIDAY"];
+    render(
+      <PrimeReactProvider>
+        <WeekCarousel
+          selectedDate={new Date(`${WEEK_DATES[0]}T00:00:00.000Z`)}
+          weekStartDay={WEEK_START}
+          workingWeekdays={workingWeekdays}
+          entriesByDate={buildEntries()}
+          referenceWeek={null}
+          onSelectDate={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </PrimeReactProvider>,
+    );
+
+    // The mock's `CarouselContent` keeps every item mounted (only the
+    // active one unhidden, see its own doc comment) -- `hidden: true`
+    // includes those hidden cards too, so this reads off every rendered
+    // card's own Arrival value, in DOM order.
+    const arrivalFields = screen.getAllByRole("combobox", {
+      name: "Arrival",
+      hidden: true,
+    });
+    expect(arrivalFields.map((el) => el.getAttribute("value"))).toEqual([
+      "08:00", // Wed (WEEK_DATES index 0)
+      "08:10", // Fri (WEEK_DATES index 2)
+      "08:25", // Mon (WEEK_DATES index 5)
+    ]);
+  });
+
+  test("shows an empty-state message instead of a carousel when no working days are configured", () => {
+    render(
+      <PrimeReactProvider>
+        <WeekCarousel
+          selectedDate={new Date(`${WEEK_DATES[0]}T00:00:00.000Z`)}
+          weekStartDay={WEEK_START}
+          workingWeekdays={[]}
+          entriesByDate={buildEntries()}
+          referenceWeek={null}
+          onSelectDate={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </PrimeReactProvider>,
+    );
+
+    expect(
+      screen.queryByRole("combobox", { name: "Arrival", hidden: true }),
+    ).toBeNull();
+    expect(
+      screen.getByText(
+        "No working days are configured. Set up your work schedule from the user menu.",
+      ),
+    ).toBeDefined();
   });
 });
 
@@ -364,6 +441,7 @@ describe("WeekCarousel reference-week prefill switch (spec §5.7)", () => {
         <WeekCarousel
           selectedDate={new Date(`${selectedIso}T00:00:00.000Z`)}
           weekStartDay={WEEK_START}
+          workingWeekdays={ALL_WEEKDAYS}
           entriesByDate={entriesByDate}
           referenceWeek={referenceWeek}
           onSelectDate={vi.fn()}
@@ -403,6 +481,7 @@ describe("WeekCarousel reference-week prefill switch (spec §5.7)", () => {
         <WeekCarousel
           selectedDate={new Date(`${WEEK_DATES[1]}T00:00:00.000Z`)}
           weekStartDay={WEEK_START}
+          workingWeekdays={ALL_WEEKDAYS}
           entriesByDate={entries}
           referenceWeek={referenceWeekFixture()}
           onSelectDate={vi.fn()}
@@ -444,6 +523,7 @@ describe("WeekCarousel reference-week prefill switch (spec §5.7)", () => {
         <WeekCarousel
           selectedDate={new Date(`${WEEK_DATES[1]}T00:00:00.000Z`)}
           weekStartDay={WEEK_START}
+          workingWeekdays={ALL_WEEKDAYS}
           entriesByDate={entries}
           referenceWeek={referenceWeek}
           onSelectDate={vi.fn()}
@@ -460,6 +540,7 @@ describe("WeekCarousel reference-week prefill switch (spec §5.7)", () => {
         <WeekCarousel
           selectedDate={new Date(`${WEEK_DATES[3]}T00:00:00.000Z`)}
           weekStartDay={WEEK_START}
+          workingWeekdays={ALL_WEEKDAYS}
           entriesByDate={entries}
           referenceWeek={referenceWeek}
           onSelectDate={vi.fn()}
@@ -511,6 +592,7 @@ describe("WeekCarousel reference-week prefill switch (spec §5.7)", () => {
         <WeekCarousel
           selectedDate={new Date(`${WEEK_DATES[0]}T00:00:00.000Z`)}
           weekStartDay={WEEK_START}
+          workingWeekdays={ALL_WEEKDAYS}
           entriesByDate={entries}
           referenceWeek={referenceWeek}
           onSelectDate={vi.fn()}
@@ -528,6 +610,7 @@ describe("WeekCarousel reference-week prefill switch (spec §5.7)", () => {
         <WeekCarousel
           selectedDate={new Date(`${WEEK_DATES[3]}T00:00:00.000Z`)}
           weekStartDay={WEEK_START}
+          workingWeekdays={ALL_WEEKDAYS}
           entriesByDate={entries}
           referenceWeek={referenceWeek}
           onSelectDate={vi.fn()}
@@ -547,6 +630,7 @@ describe("WeekCarousel reference-week prefill switch (spec §5.7)", () => {
         <WeekCarousel
           selectedDate={new Date(`${WEEK_DATES[1]}T00:00:00.000Z`)}
           weekStartDay={WEEK_START}
+          workingWeekdays={ALL_WEEKDAYS}
           entriesByDate={entries}
           referenceWeek={referenceWeek}
           onSelectDate={vi.fn()}

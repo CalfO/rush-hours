@@ -275,7 +275,7 @@ export function DayCard({
       onSubmit={(event) => void handleSubmit(onSubmit)(event)}
       className="flex flex-col gap-4"
     >
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-3">
         <div>
           <label className="mb-1 block text-sm font-medium text-surface-700">
             {t("timeEntry.arrivalTimeLabel")}

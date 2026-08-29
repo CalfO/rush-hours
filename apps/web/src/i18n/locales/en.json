@@ -92,7 +92,8 @@
     "weekIndicatorLabel": "Week balance",
     "monthTotalLabel": "Month total",
     "previousMonth": "Previous month",
-    "nextMonth": "Next month"
+    "nextMonth": "Next month",
+    "noWorkingDays": "No working days are configured. Set up your work schedule from the user menu."
   },
   "analytics": {
     "title": "Analytics",

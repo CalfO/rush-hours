@@ -511,6 +511,7 @@ export default function TimeEntryPage() {
               <WeekCarousel
                 selectedDate={selectedDate}
                 weekStartDay={weekStartDay}
+                workingWeekdays={workingWeekdays}
                 entriesByDate={entriesByDate}
                 referenceWeek={referenceWeek}
                 onSelectDate={handleDateChange}

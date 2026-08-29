@@ -92,7 +92,8 @@
     "weekIndicatorLabel": "Solde de la semaine",
     "monthTotalLabel": "Total du mois",
     "previousMonth": "Mois précédent",
-    "nextMonth": "Mois suivant"
+    "nextMonth": "Mois suivant",
+    "noWorkingDays": "Aucun jour travaillé n'est configuré. Renseignez votre semaine de travail depuis le menu utilisateur."
   },
   "analytics": {
     "title": "Analyses",
