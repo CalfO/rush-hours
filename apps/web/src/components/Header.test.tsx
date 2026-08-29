@@ -7,7 +7,7 @@ import {
   test,
   vi,
 } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { PrimeReactProvider } from "@primereact/core";
@@ -154,15 +154,27 @@ async function openAvatarMenu(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("Header (spec §7.1)", () => {
-  test("renders the title, both nav tabs, the language selector, and an avatar trigger for an authenticated user", () => {
+  test("renders the title, both nav tabs, the language selector (with flags), and an avatar trigger for an authenticated user", async () => {
     renderHeader();
+    const user = userEvent.setup();
 
     expect(screen.getByText("RushHours")).toBeDefined();
     expect(screen.getByRole("tab", { name: "Time entry" })).toBeDefined();
     expect(screen.getByRole("tab", { name: "Analytics" })).toBeDefined();
-    expect(screen.getByRole("group", { name: "Language" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "FR" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "EN" })).toBeDefined();
+
+    const languageSelect = screen.getByRole("combobox", { name: "Language" });
+    expect(languageSelect).toBeDefined();
+
+    await user.click(languageSelect);
+    const frOption = screen.getByRole("option", { name: "FR" });
+    const enOption = screen.getByRole("option", { name: "EN" });
+    expect(frOption).toBeDefined();
+    expect(enOption).toBeDefined();
+    // The accessible name deliberately excludes the flag (aria-hidden, it's
+    // decorative) -- assert it's actually rendered as visible content too.
+    expect(within(frOption).getByText("🇫🇷")).toBeDefined();
+    expect(within(enOption).getByText("🇬🇧")).toBeDefined();
+
     // Avatar initials derived from the authenticated user (Ada Lovelace).
     expect(screen.getByRole("button", { name: "AL" })).toBeDefined();
   });
@@ -193,7 +205,8 @@ describe("Header (spec §7.1)", () => {
     expect(screen.getByRole("tab", { name: "Time entry" })).toBeDefined();
     expect(screen.getByRole("tab", { name: "Analytics" })).toBeDefined();
 
-    await user.click(screen.getByRole("button", { name: "FR" }));
+    await user.click(screen.getByRole("combobox", { name: "Language" }));
+    await user.click(screen.getByRole("option", { name: "FR" }));
 
     // Driven through the real i18next singleton (not a mock): selecting
     // "FR" flips `i18n.language` to "fr", which every `useTranslation()`
@@ -203,11 +216,12 @@ describe("Header (spec §7.1)", () => {
     expect(i18n.language).toBe("fr");
     expect(await screen.findByRole("tab", { name: "Saisie" })).toBeDefined();
     expect(await screen.findByRole("tab", { name: "Analyses" })).toBeDefined();
-    expect(screen.getByRole("group", { name: "Langue" })).toBeDefined();
+    expect(screen.getByRole("combobox", { name: "Langue" })).toBeDefined();
 
     // Switching back to English confirms this is a live, two-way selector
     // reacting to `onValueChange`, not a one-shot effect.
-    await user.click(screen.getByRole("button", { name: "EN" }));
+    await user.click(screen.getByRole("combobox", { name: "Langue" }));
+    await user.click(screen.getByRole("option", { name: "EN" }));
 
     expect(i18n.language).toBe("en");
     expect(

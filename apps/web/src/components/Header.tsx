@@ -20,20 +20,48 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "./ui/menu";
+import {
+  Select,
+  SelectList,
+  SelectOption,
+  SelectPopup,
+  SelectPortal,
+  SelectPositioner,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import { Tabs, TabsList, TabsTab } from "./ui/tabs";
-import { ToggleButton } from "./ui/togglebutton";
-import { ToggleButtonGroup } from "./ui/togglebuttongroup";
 
 /**
  * Spec §7.1 — the two supported UI languages. Labels are the language codes
  * themselves (FR/EN), not translated strings — a language switcher's own
  * option labels conventionally stay in each language's own name/code
- * regardless of the currently active locale.
+ * regardless of the currently active locale. Flags are Unicode emoji, not
+ * an image/icon dependency — keeps this within the "Tailwind + PrimeReact
+ * Primitive only" constraint (spec §2) rather than adding a flag-icon
+ * package for two static flags.
  */
-const LANGUAGE_OPTIONS: { value: string; label: string }[] = [
-  { value: "fr", label: "FR" },
-  { value: "en", label: "EN" },
+const LANGUAGE_OPTIONS: { value: string; label: string; flag: string }[] = [
+  { value: "fr", label: "FR", flag: "🇫🇷" },
+  { value: "en", label: "EN", flag: "🇬🇧" },
 ];
+
+interface LanguageOptionInstance {
+  options: typeof LANGUAGE_OPTIONS;
+}
+
+function LanguageOptionContent({
+  option,
+}: {
+  option: (typeof LANGUAGE_OPTIONS)[number];
+}) {
+  return (
+    <span className="flex items-center gap-2">
+      <span aria-hidden="true">{option.flag}</span>
+      <span>{option.label}</span>
+    </span>
+  );
+}
 
 /**
  * Derives avatar initials from `user.firstName`/`user.lastName` first
@@ -62,7 +90,8 @@ interface HeaderProps {
 /**
  * Sticky header rendered on every protected view (spec §7.1), via
  * `AppLayout`. Left to right: title, nav (routed `Tabs`), language
- * `ToggleButtonGroup`, avatar menu. `profileModalOpen`/`workScheduleModalOpen`/
+ * `Select` (flag + code, both in the trigger and the dropdown), avatar
+ * menu. `profileModalOpen`/`workScheduleModalOpen`/
  * `deleteConfirmOpen` are owned here rather than inside the `Menu` itself:
  * the menu closes on item selection, but the modal it opens must outlive
  * that close — so the modals render as siblings of the header bar, not
@@ -113,21 +142,43 @@ export function Header({ referenceWeek, refreshReferenceWeek }: HeaderProps) {
         </Tabs>
 
         <div className="ml-auto flex items-center gap-3">
-          <ToggleButtonGroup
+          <Select
             value={i18n.language}
             onValueChange={(event) => {
               if (typeof event.value === "string") {
                 void i18n.changeLanguage(event.value);
               }
             }}
-            aria-label={t("header.languageLabel")}
+            options={LANGUAGE_OPTIONS}
+            optionLabel="label"
+            optionValue="value"
           >
-            {LANGUAGE_OPTIONS.map((option) => (
-              <ToggleButton key={option.value} value={option.value}>
-                {option.label}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
+            <SelectTrigger aria-label={t("header.languageLabel")}>
+              <SelectValue>
+                {() => {
+                  const selected =
+                    LANGUAGE_OPTIONS.find((o) => o.value === i18n.language) ??
+                    LANGUAGE_OPTIONS[0];
+                  return <LanguageOptionContent option={selected} />;
+                }}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner>
+                <SelectPopup>
+                  <SelectList>
+                    {(instance: LanguageOptionInstance) =>
+                      instance.options.map((option, index) => (
+                        <SelectOption key={option.value} index={index}>
+                          <LanguageOptionContent option={option} />
+                        </SelectOption>
+                      ))
+                    }
+                  </SelectList>
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
 
           <Menu>
             <MenuTrigger className="cursor-pointer rounded-full outline-none focus-visible:outline focus-visible:outline-primary">
