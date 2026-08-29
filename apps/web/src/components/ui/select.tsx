@@ -128,10 +128,10 @@ function SelectPopup({ className, ...props }: SelectPopupProps) {
   return (
     <PRSelect.Popup
       className={cn(
-        `rounded-md min-w-(--px-positioner-anchor-width)
+        `rounded-lg min-w-(--px-positioner-anchor-width)
                 bg-surface-0 dark:bg-surface-900
                 border border-surface-200 dark:border-surface-700
-                text-surface-700 dark:text-surface-0
+                text-surface-700 dark:text-surface-0 shadow-md
                 origin-(--px-transform-origin)
                 data-enter-from:opacity-0 data-enter-from:scale-[0.93]
                 data-leave-to:opacity-0 data-leave-to:scale-[0.93]

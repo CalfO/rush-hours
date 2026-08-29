@@ -15,6 +15,7 @@ import {
 import type { DatePickerRootValueChangeEvent } from "@primereact/types/primitive/datepicker";
 import { toIsoDate } from "../lib/date";
 import { upsertTimeEntry, type TimeEntryRecord } from "../api/time-entries";
+import { Button } from "./ui/button";
 import {
   DatePicker,
   DatePickerInput,
@@ -458,13 +459,13 @@ export function DayCard({
       {submitError && <p className="text-sm text-error-700">{submitError}</p>}
 
       <div className="flex justify-end">
-        <button
+        <Button
           type="submit"
           disabled={formState.isSubmitting}
-          className="rounded-md bg-primary-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="px-4 py-2 text-sm"
         >
           {t("timeEntry.save")}
-        </button>
+        </Button>
       </div>
     </form>
   );

@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, test, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { PrimeReactProvider } from "@primereact/core";
 import LoginPage from "./LoginPage";
 import { useAuth } from "../auth/AuthProvider";
 import {
@@ -61,7 +62,11 @@ function renderLoginPage() {
     { path: "/onboarding", element: <div>onboarding-page</div> },
   ];
   const router = createMemoryRouter(routes, { initialEntries: ["/login"] });
-  render(<RouterProvider router={router} />);
+  render(
+    <PrimeReactProvider>
+      <RouterProvider router={router} />
+    </PrimeReactProvider>,
+  );
   return router;
 }
 

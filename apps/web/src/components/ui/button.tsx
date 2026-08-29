@@ -5,7 +5,7 @@ import { Button as PRButton } from "primereact/button";
 import * as React from "react";
 
 const buttonVariants = cva(
-  "inline-flex gap-2 cursor-pointer select-none items-center justify-center overflow-hidden relative rounded-md font-medium disabled:pointer-events-none disabled:opacity-60 transition-[background-color,color] duration-200 focus-visible:outline-1 focus-visible:outline-offset-2",
+  "inline-flex gap-2 cursor-pointer select-none items-center justify-center overflow-hidden relative rounded-lg font-medium disabled:pointer-events-none disabled:opacity-60 transition-[background-color,color,box-shadow] duration-200 focus-visible:outline-1 focus-visible:outline-offset-2",
   {
     variants: {
       variant: {
@@ -52,8 +52,13 @@ const buttonVariants = cva(
       {
         variant: "default",
         severity: "default",
+        // This app's own dominant color (its Tailwind `primary` scale), not
+        // PrimeReact's separate `primary-emphasis`/`primary-contrast`
+        // theme tokens — every primary action in this app (DayCard,
+        // ProfileForm, WorkScheduleModal, ConfirmDialog) renders through
+        // this default `severity="default"` compound variant.
         className:
-          "bg-slate-900 hover:bg-primary-emphasis active:bg-primary-emphasis-alt text-primary-contrast dark:bg-slate-50",
+          "bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white shadow-sm hover:shadow",
       },
       {
         variant: "default",

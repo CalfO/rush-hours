@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "./button";
 import { Modal } from "./Modal";
 
 interface ConfirmDialogProps {
@@ -85,22 +86,24 @@ export function ConfirmDialog({
         <p className="mb-3 text-sm text-error-700">{submitError}</p>
       )}
       <div className="flex justify-end gap-2">
-        <button
+        <Button
           type="button"
+          variant="outlined"
+          severity="secondary"
           onClick={handleCancel}
           disabled={isSubmitting}
-          className="rounded-md border border-surface-300 px-4 py-2 text-sm text-surface-700 hover:bg-surface-100 disabled:opacity-50"
+          className="px-4 py-2 text-sm"
         >
           {cancelLabel}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={() => void handleConfirm()}
           disabled={isSubmitting}
-          className="rounded-md bg-primary-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="px-4 py-2 text-sm"
         >
           {confirmLabel}
-        </button>
+        </Button>
       </div>
     </Modal>
   );

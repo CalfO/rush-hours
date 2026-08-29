@@ -45,7 +45,7 @@ function MenuPopup({ className, ...props }: MenuPopupProps) {
   return (
     <PRMenu.Popup
       className={cn(
-        `relative bg-surface-0 dark:bg-surface-900 rounded-md border border-surface-200 dark:border-surface-700 shadow-md
+        `relative bg-surface-0 dark:bg-surface-900 rounded-lg border border-surface-200 dark:border-surface-700 shadow-md
                 text-surface-700 dark:text-surface-0 min-w-max origin-(--px-transform-origin)
                 data-enter-from:opacity-0 data-enter-from:scale-[0.93]
                 data-leave-to:opacity-0 data-leave-to:scale-[0.93]

@@ -139,7 +139,7 @@ export function WeekCarousel({
 
           return (
             <CarouselItem key={iso} value={iso}>
-              <div className="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+              <div className="rounded-xl border border-surface-200 bg-surface-0 p-3 shadow-sm dark:border-surface-700">
                 <p className="mb-2 text-sm font-semibold text-surface-800 dark:text-surface-100">
                   {t(`weekdays.${getWeekdayForDate(day)}`)}{" "}
                   <span className="font-normal text-surface-500">

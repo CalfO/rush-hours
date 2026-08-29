@@ -8,24 +8,29 @@
  * are styled entirely through these CSS variables + the tailwindcss-primeui
  * plugin (tailwind.config.js), not a PrimeReact CSS theme (spec §2.1
  * explicitly forbids one). Values below map the --p-primary-* scale onto this
- * app's own Material-flat `primary` palette (tailwind.config.js) and the
+ * app's own `primary` (Indigo) palette (tailwind.config.js) and the
  * --p-surface-* scale onto the standard Tailwind `slate` scale (this repo's
  * components.json baseColor), so PrimeReact-derived components render with
  * the same palette as everything else instead of PrimeReact's neutral-gray
- * default.
+ * default. This is the actual source of truth for anything driven by
+ * PrimeReact's own `--p-primary-color`/`--p-highlight-*` tokens (focus
+ * rings, selected/checked states, the calendar's selected day, the
+ * `tailwindcss-primeui` plugin's own `bg-primary-*` utilities) — it does
+ * NOT automatically follow `tailwind.config.js`'s `theme.extend.colors.primary`
+ * scale, so the two must be kept in sync by hand whenever either changes.
  */
 :root {
-  --p-primary-50: #e8f1fb;
-  --p-primary-100: #c5dcf5;
-  --p-primary-200: #9cc2ec;
-  --p-primary-300: #6fa3e0;
-  --p-primary-400: #3d82d1;
-  --p-primary-500: #1976d2;
-  --p-primary-600: #1565c0;
-  --p-primary-700: #0d47a1;
-  --p-primary-800: #0a3672;
-  --p-primary-900: #082a5e;
-  --p-primary-950: #051a3a;
+  --p-primary-50: #eef2ff;
+  --p-primary-100: #e0e7ff;
+  --p-primary-200: #c7d2fe;
+  --p-primary-300: #a5b4fc;
+  --p-primary-400: #818cf8;
+  --p-primary-500: #6366f1;
+  --p-primary-600: #4f46e5;
+  --p-primary-700: #4338ca;
+  --p-primary-800: #3730a3;
+  --p-primary-900: #312e81;
+  --p-primary-950: #1e1b4b;
 
   --p-surface-0: #ffffff;
   --p-surface-50: #f8fafc;

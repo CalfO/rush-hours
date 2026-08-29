@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,6 +13,8 @@ import {
   verifyRegistration,
 } from "../api/auth";
 import { useAuth } from "../auth/AuthProvider";
+import { Button } from "../components/ui/button";
+import { InputText } from "../components/ui/inputtext";
 
 type LoginStep =
   "idle" | "checking" | "offer-register" | "ceremony-in-progress" | "error";
@@ -104,23 +106,24 @@ export default function LoginPage() {
         >
           <label className="flex flex-col gap-1 text-sm text-surface-700">
             {t("auth.usernameLabel")}
-            <input
+            <InputText
               type="text"
               value={username}
-              onChange={(event) => setUsername(event.target.value)}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                setUsername(event.target.value)
+              }
               placeholder={t("auth.usernamePlaceholder")}
-              className="rounded border border-surface-500 px-3 py-2"
               disabled={isBusy}
               required
             />
           </label>
-          <button
+          <Button
             type="submit"
-            className="rounded bg-surface-900 px-4 py-2 text-white disabled:opacity-50"
+            className="px-4 py-2"
             disabled={isBusy || username.trim() === ""}
           >
             {t("auth.continue")}
-          </button>
+          </Button>
         </form>
 
         {step === "offer-register" && (
@@ -128,14 +131,14 @@ export default function LoginPage() {
             <p className="text-sm text-surface-700">
               {t("auth.offerRegisterMessage")}
             </p>
-            <button
+            <Button
               type="button"
               onClick={() => void handleRegister()}
-              className="mt-2 rounded bg-surface-900 px-4 py-2 text-white disabled:opacity-50"
+              className="mt-2 px-4 py-2"
               disabled={isBusy}
             >
               {t("auth.offerRegisterButton")}
-            </button>
+            </Button>
           </div>
         )}
 

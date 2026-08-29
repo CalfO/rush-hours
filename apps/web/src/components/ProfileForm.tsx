@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema, type ProfileInput } from "@rushhours/domain";
 import { updateProfile } from "../api/users";
 import type { AuthUser } from "../api/auth";
+import { Button } from "./ui/button";
 import { InputText } from "./ui/inputtext";
 
 interface ProfileFormProps {
@@ -134,21 +135,23 @@ export function ProfileForm({
 
       <div className="flex justify-end gap-2">
         {onCancel && (
-          <button
+          <Button
             type="button"
+            variant="outlined"
+            severity="secondary"
             onClick={onCancel}
-            className="rounded-md border border-surface-300 px-4 py-2 text-sm text-surface-700 hover:bg-surface-100"
+            className="px-4 py-2 text-sm"
           >
             {t("profile.cancel")}
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           type="submit"
           disabled={formState.isSubmitting}
-          className="rounded-md bg-primary-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="px-4 py-2 text-sm"
         >
           {submitLabel}
-        </button>
+        </Button>
       </div>
     </form>
   );

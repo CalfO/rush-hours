@@ -12,14 +12,27 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Indigo — replaces the original Material blue for a more current,
+        // distinctive "dominant color" (user request). Anchored on Tailwind's
+        // own indigo scale so DEFAULT/600 lands exactly on #4f46e5. Full
+        // 0-950 scale (same reasoning as `surface` below: a gap at any shade
+        // silently drops that utility's CSS rule) — kept in sync by hand with
+        // `index.css`'s `--p-primary-*` block, PrimeReact's own separate
+        // source of truth for anything driven by its `--p-primary-color`/
+        // `--p-highlight-*` tokens (see that file's own doc comment).
         primary: {
-          DEFAULT: "#1565c0",
-          50: "#e8f1fb",
-          100: "#c5dcf5",
-          500: "#1976d2",
-          600: "#1565c0",
-          700: "#0d47a1",
-          900: "#082a5e",
+          DEFAULT: "#4f46e5",
+          50: "#eef2ff",
+          100: "#e0e7ff",
+          200: "#c7d2fe",
+          300: "#a5b4fc",
+          400: "#818cf8",
+          500: "#6366f1",
+          600: "#4f46e5",
+          700: "#4338ca",
+          800: "#3730a3",
+          900: "#312e81",
+          950: "#1e1b4b",
         },
         secondary: {
           DEFAULT: "#00897b",

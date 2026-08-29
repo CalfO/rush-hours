@@ -122,8 +122,12 @@ export function Header({ referenceWeek, refreshReferenceWeek }: HeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex items-center gap-6 border-b border-surface-200 bg-surface-0 px-4 py-2 dark:border-surface-700 dark:bg-surface-900">
-        <span className="shrink-0 text-lg font-semibold text-surface-900 dark:text-surface-0">
+      <header className="sticky top-0 z-30 flex items-center gap-6 bg-surface-0 px-4 py-2.5 shadow-sm dark:bg-surface-900">
+        <span className="flex shrink-0 items-center gap-2 text-lg font-semibold text-surface-900 dark:text-surface-0">
+          <span
+            className="size-2.5 rounded-sm bg-primary-600"
+            aria-hidden="true"
+          />
           {t("app.title")}
         </span>
 

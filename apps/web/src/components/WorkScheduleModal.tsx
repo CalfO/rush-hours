@@ -19,6 +19,7 @@ import {
 import { cn } from "../lib/utils";
 import { getWorkSchedule, putWorkSchedule } from "../api/users";
 import { Modal } from "./ui/Modal";
+import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { InputNumber, InputNumberInput } from "./ui/inputnumber";
 import {
@@ -312,15 +313,17 @@ function DeltaAndActions({
       )}
       <div className="flex justify-end gap-2">
         {cancellable && (
-          <button
+          <Button
             type="button"
+            variant="outlined"
+            severity="secondary"
             onClick={onCancel}
-            className="rounded-md border border-surface-300 px-4 py-2 text-sm text-surface-700 hover:bg-surface-100"
+            className="px-4 py-2 text-sm"
           >
             {t("workSchedule.cancel")}
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           type="submit"
           disabled={
             delta !== 0 ||
@@ -328,10 +331,10 @@ function DeltaAndActions({
             hasIncompleteCheckedDay ||
             isSubmitting
           }
-          className="rounded-md bg-primary-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="px-4 py-2 text-sm"
         >
           {t("workSchedule.save")}
-        </button>
+        </Button>
       </div>
     </div>
   );
