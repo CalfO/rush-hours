@@ -11,6 +11,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Children, createContext, isValidElement, useContext } from "react";
 import type { ReactElement, ReactNode } from "react";
+import { PrimeReactProvider } from "@primereact/core";
 import TimeEntryPage from "./TimeEntryPage";
 import {
   getSummary,
@@ -19,6 +20,7 @@ import {
   type RangeSummary,
 } from "../api/time-entries";
 import { getWorkSchedule } from "../api/users";
+import { useAuth } from "../auth/AuthProvider";
 import i18n from "../i18n/config";
 
 /*
@@ -159,6 +161,14 @@ vi.mock("../api/time-entries", () => ({
   upsertTimeEntry: vi.fn(),
 }));
 
+// Rendered standalone here (no `<Outlet>`/`AuthProvider` ancestor, unlike
+// the real app via `AppLayout`) — `useOutletContext()` already degrades
+// gracefully to "no reference week" on its own (see `TimeEntryPage.tsx`'s
+// own doc comment on that fallback), but `useAuth()` throws outside an
+// `AuthProvider`, so it's mocked here purely to let the page render at all;
+// none of this file's tests exercise the §5.5 reference-week save-prompt.
+vi.mock("../auth/AuthProvider", () => ({ useAuth: vi.fn() }));
+
 const today = new Date();
 const selectedIso = today.toISOString().slice(0, 10);
 const currentMonth = selectedIso.slice(0, 7);
@@ -252,6 +262,21 @@ beforeEach(async () => {
   await i18n.changeLanguage("en");
   vi.clearAllMocks();
 
+  vi.mocked(useAuth).mockReturnValue({
+    status: "authenticated",
+    user: {
+      id: "u1",
+      username: "user",
+      role: "USER",
+      firstName: "Ada",
+      lastName: "Lovelace",
+      email: "ada@example.com",
+      onboardingCompletedAt: "2026-01-01T00:00:00.000Z",
+    },
+    refresh: vi.fn(),
+    logout: vi.fn(),
+  });
+
   vi.mocked(getWorkSchedule).mockResolvedValue({
     weeklyContractHours: 35,
     weekStartDay: "MONDAY",
@@ -281,7 +306,11 @@ function findCalendarButton(text: string): HTMLButtonElement {
 describe("TimeEntryPage (spec §7.2)", () => {
   test("renders the day form and saves date and four time fields", async () => {
     const user = userEvent.setup();
-    render(<TimeEntryPage />);
+    render(
+      <PrimeReactProvider>
+        <TimeEntryPage />
+      </PrimeReactProvider>,
+    );
 
     expect(await screen.findByRole("button", { name: "Save" })).toBeDefined();
 
@@ -324,7 +353,11 @@ describe("TimeEntryPage (spec §7.2)", () => {
   });
 
   test("shows day/week balances and color-codes the aligned monthly calendar", async () => {
-    render(<TimeEntryPage />);
+    render(
+      <PrimeReactProvider>
+        <TimeEntryPage />
+      </PrimeReactProvider>,
+    );
 
     const calendarMonth = await screen.findByText(currentMonth);
     expect(calendarMonth).toBeDefined();
@@ -344,7 +377,11 @@ describe("TimeEntryPage (spec §7.2)", () => {
 
   test("changes the selected day and loads the previous/next month", async () => {
     const user = userEvent.setup();
-    render(<TimeEntryPage />);
+    render(
+      <PrimeReactProvider>
+        <TimeEntryPage />
+      </PrimeReactProvider>,
+    );
 
     await screen.findByText(currentMonth);
     await user.click(findCalendarButton("2-1h15"));
@@ -373,7 +410,11 @@ describe("TimeEntryPage (spec §7.2)", () => {
   });
 
   test("the page-level date-picker jumps directly to a day outside the currently displayed week, re-rendering the carousel on the week containing it (spec §3.2)", async () => {
-    render(<TimeEntryPage />);
+    render(
+      <PrimeReactProvider>
+        <TimeEntryPage />
+      </PrimeReactProvider>,
+    );
 
     // Sanity check the starting point: today's card is pre-filled from
     // `savedEntry` (the mocked existing entry for `selectedIso`).

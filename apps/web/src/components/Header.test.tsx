@@ -15,6 +15,7 @@ import type { WorkScheduleInput } from "@rushhours/domain";
 import AppLayout from "./AppLayout";
 import { useAuth } from "../auth/AuthProvider";
 import { getWorkSchedule, putWorkSchedule, updateProfile } from "../api/users";
+import { getReferenceWeek } from "../api/reference-week";
 import type { AuthUser } from "../api/auth";
 import i18n from "../i18n/config";
 
@@ -67,6 +68,15 @@ vi.mock("../api/users", () => ({
   putWorkSchedule: vi.fn(),
   updateProfile: vi.fn(),
 }));
+// `Header` is mounted here via the real `AppLayout` (see `renderHeader`
+// below), which now fetches the reference-week state on mount (spec
+// §5.6/§5.7) — mocked so this file's own header-focused assertions don't
+// depend on a real network call.
+vi.mock("../api/reference-week", () => ({
+  getReferenceWeek: vi.fn(),
+  putReferenceWeek: vi.fn(),
+  deleteReferenceWeek: vi.fn(),
+}));
 
 const authenticatedUser: AuthUser = {
   id: "u1",
@@ -101,6 +111,7 @@ beforeEach(() => {
     logout: vi.fn().mockResolvedValue(undefined),
   });
   vi.mocked(getWorkSchedule).mockResolvedValue(defaultWorkSchedule);
+  vi.mocked(getReferenceWeek).mockResolvedValue({ exists: false, days: [] });
 });
 
 afterEach(async () => {

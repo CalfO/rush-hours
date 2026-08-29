@@ -7,7 +7,11 @@ import {
   type Resolver,
   type SubmitHandler,
 } from "react-hook-form";
-import { timeEntrySchema, type TimeEntryInput } from "@rushhours/domain";
+import {
+  timeEntrySchema,
+  type ReferenceWeekDayInput,
+  type TimeEntryInput,
+} from "@rushhours/domain";
 import type { DatePickerRootValueChangeEvent } from "@primereact/types/primitive/datepicker";
 import { toIsoDate } from "../lib/date";
 import { upsertTimeEntry, type TimeEntryRecord } from "../api/time-entries";
@@ -23,6 +27,13 @@ import {
 interface DayCardProps {
   date: Date; // UTC-midnight, this card's day
   existingEntry: TimeEntryRecord | undefined;
+  /**
+   * §5.7 reference-week prefill — only consulted when `existingEntry` is
+   * `undefined` (an already-saved day is never overwritten, enforced by the
+   * caller, `WeekCarousel`). Populates form defaults only, never
+   * auto-submits.
+   */
+  prefillEntry?: ReferenceWeekDayInput;
   onSaved: (entry: TimeEntryRecord) => void;
 }
 
@@ -83,6 +94,24 @@ function combineDateAndTime(utcDate: Date, time: Date): Date {
       time.getHours(),
       time.getMinutes(),
     ),
+  );
+}
+
+/**
+ * Inverse of `combineDateAndTime`: builds a picker-shape (local wall-clock)
+ * `Date` from `cardDate`'s own UTC calendar fields plus a reference-week
+ * "minutes since midnight" value (§5.7). Used only for `prefillEntry` —
+ * `minutes` is already a plain minutes-of-day integer (no UTC/local
+ * ambiguity of its own, see `reference-week.schema.ts`'s doc comment), so
+ * this only needs to place it on the right calendar day for the picker.
+ */
+function minutesToPickerTime(cardDate: Date, minutes: number): Date {
+  return new Date(
+    cardDate.getUTCFullYear(),
+    cardDate.getUTCMonth(),
+    cardDate.getUTCDate(),
+    Math.floor(minutes / 60),
+    minutes % 60,
   );
 }
 
@@ -177,7 +206,12 @@ function dayFormResolver(date: Date): Resolver<DayFormValues> {
  * need a manual reset effect (react-best-practices — prefer remount over
  * prop-to-state sync).
  */
-export function DayCard({ date, existingEntry, onSaved }: DayCardProps) {
+export function DayCard({
+  date,
+  existingEntry,
+  prefillEntry,
+  onSaved,
+}: DayCardProps) {
   const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -186,16 +220,24 @@ export function DayCard({ date, existingEntry, onSaved }: DayCardProps) {
     defaultValues: {
       arrivalTime: existingEntry
         ? toPickerDate(existingEntry.arrivalTime)
-        : null,
+        : prefillEntry
+          ? minutesToPickerTime(date, prefillEntry.arrivalMinutes)
+          : null,
       lunchBreakStart: existingEntry
         ? toPickerDate(existingEntry.lunchBreakStart)
-        : null,
+        : prefillEntry
+          ? minutesToPickerTime(date, prefillEntry.lunchBreakStartMinutes)
+          : null,
       lunchBreakEnd: existingEntry
         ? toPickerDate(existingEntry.lunchBreakEnd)
-        : null,
+        : prefillEntry
+          ? minutesToPickerTime(date, prefillEntry.lunchBreakEndMinutes)
+          : null,
       departureTime: existingEntry
         ? toPickerDate(existingEntry.departureTime)
-        : null,
+        : prefillEntry
+          ? minutesToPickerTime(date, prefillEntry.departureMinutes)
+          : null,
     },
   });
 

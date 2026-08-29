@@ -2,9 +2,14 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
+import {
+  deleteReferenceWeek,
+  type ReferenceWeekState,
+} from "../api/reference-week";
 import ProfileModal from "./ProfileModal";
 import WorkScheduleModal from "./WorkScheduleModal";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import { ConfirmDialog } from "./ui/ConfirmDialog";
 import {
   Menu,
   MenuItem,
@@ -48,15 +53,22 @@ function getInitials(user: {
   return user.username[0]?.toUpperCase() ?? "";
 }
 
+interface HeaderProps {
+  /** §5.6/§5.7 — owned by `AppLayout`, `null` until its fetch resolves. */
+  referenceWeek: ReferenceWeekState | null;
+  refreshReferenceWeek: () => void;
+}
+
 /**
  * Sticky header rendered on every protected view (spec §7.1), via
  * `AppLayout`. Left to right: title, nav (routed `Tabs`), language
- * `Select`, avatar menu. `profileModalOpen`/`workScheduleModalOpen` are
- * owned here rather than inside the `Menu` itself: the menu closes on item
- * selection, but the modal it opens must outlive that close — so the
- * modals render as siblings of the header bar, not nested inside `Menu`.
+ * `ToggleButtonGroup`, avatar menu. `profileModalOpen`/`workScheduleModalOpen`/
+ * `deleteConfirmOpen` are owned here rather than inside the `Menu` itself:
+ * the menu closes on item selection, but the modal it opens must outlive
+ * that close — so the modals render as siblings of the header bar, not
+ * nested inside `Menu`.
  */
-export function Header() {
+export function Header({ referenceWeek, refreshReferenceWeek }: HeaderProps) {
   const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -64,6 +76,7 @@ export function Header() {
 
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [workScheduleModalOpen, setWorkScheduleModalOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   // `RequireAuth` guarantees `user` is set for any route this header
   // renders on, but `useAuth()`'s type is `AuthUser | null` — guard rather
@@ -132,6 +145,11 @@ export function Header() {
                     <MenuItem onSelect={() => setWorkScheduleModalOpen(true)}>
                       {t("header.myWorkSchedule")}
                     </MenuItem>
+                    {referenceWeek?.exists && (
+                      <MenuItem onSelect={() => setDeleteConfirmOpen(true)}>
+                        {t("header.deleteReferenceWeek")}
+                      </MenuItem>
+                    )}
                     <MenuSeparator />
                     <MenuItem onSelect={() => void handleLogout()}>
                       {t("header.logout")}
@@ -151,6 +169,18 @@ export function Header() {
       <WorkScheduleModal
         open={workScheduleModalOpen}
         onOpenChange={setWorkScheduleModalOpen}
+      />
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title={t("referenceWeek.deleteConfirmTitle")}
+        description={t("referenceWeek.deleteConfirmDescription")}
+        confirmLabel={t("common.confirm")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={async () => {
+          await deleteReferenceWeek();
+          refreshReferenceWeek();
+        }}
       />
     </>
   );

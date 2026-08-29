@@ -182,6 +182,7 @@ function renderCarousel(selectedIso: string) {
         selectedDate={new Date(`${selectedIso}T00:00:00.000Z`)}
         weekStartDay={WEEK_START}
         entriesByDate={buildEntries()}
+        referenceWeek={null}
         onSelectDate={onSelectDate}
         onSaved={onSaved}
       />
@@ -241,6 +242,7 @@ describe("WeekCarousel (spec §3.1)", () => {
           selectedDate={new Date(`${WEEK_DATES[1]}T00:00:00.000Z`)}
           weekStartDay={WEEK_START}
           entriesByDate={buildEntries()}
+          referenceWeek={null}
           onSelectDate={vi.fn()}
           onSaved={vi.fn()}
         />
@@ -267,6 +269,7 @@ describe("WeekCarousel (spec §3.1)", () => {
           selectedDate={new Date("2026-09-02T00:00:00.000Z")}
           weekStartDay={WEEK_START}
           entriesByDate={buildEntries()}
+          referenceWeek={null}
           onSelectDate={vi.fn()}
           onSaved={vi.fn()}
         />

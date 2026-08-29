@@ -55,9 +55,18 @@ vi.mock("../api/time-entries", () => ({
   listMonth: vi.fn(),
   upsertTimeEntry: vi.fn(),
 }));
+// `AppLayout` (spec §5.6/§5.7 lot) now fetches the reference-week state
+// once on mount — mocked here purely so this file's own placement
+// assertions don't depend on a real network call.
+vi.mock("../api/reference-week", () => ({
+  getReferenceWeek: vi.fn(),
+  putReferenceWeek: vi.fn(),
+  deleteReferenceWeek: vi.fn(),
+}));
 
 import { getWorkSchedule } from "../api/users";
 import { getAnalytics, getSummary, listMonth } from "../api/time-entries";
+import { getReferenceWeek } from "../api/reference-week";
 
 const onboardedUser: AuthUser = {
   id: "u1",
@@ -91,6 +100,7 @@ beforeEach(() => {
     },
   });
   vi.mocked(listMonth).mockResolvedValue([]);
+  vi.mocked(getReferenceWeek).mockResolvedValue({ exists: false, days: [] });
   vi.mocked(getAnalytics).mockResolvedValue({
     days: [],
     weeks: [],

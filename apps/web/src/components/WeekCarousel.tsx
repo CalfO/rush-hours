@@ -1,7 +1,11 @@
-import { getWeekRange, type Weekday } from "@rushhours/domain";
-import { toIsoDate } from "../lib/date";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { getWeekdayForDate, type Weekday } from "@rushhours/domain";
+import { getWeekDays, toIsoDate } from "../lib/date";
+import type { ReferenceWeekState } from "../api/reference-week";
 import type { TimeEntryRecord } from "../api/time-entries";
 import { DayCard } from "./DayCard";
+import { ToggleButton } from "./ui/togglebutton";
 import {
   Carousel,
   CarouselContent,
@@ -14,25 +18,10 @@ interface WeekCarouselProps {
   selectedDate: Date; // UTC-midnight — single source of truth, owned by TimeEntryPage
   weekStartDay: Weekday;
   entriesByDate: Map<string, TimeEntryRecord>;
+  /** §5.6/§5.7 — `null` while `AppLayout` hasn't resolved the fetch yet. */
+  referenceWeek: ReferenceWeekState | null;
   onSelectDate: (date: Date) => void;
   onSaved: (entry: TimeEntryRecord) => void;
-}
-
-/**
- * The 7 UTC-midnight days of `selectedDate`'s week, `weekStartDay`-first —
- * same `getWeekRange` + `setUTCDate` stepping idiom `MonthCalendar.buildGrid`
- * uses for its own grid cursor, reusing `@rushhours/domain`'s own week-range
- * math rather than a locally invented weekday-ordering helper.
- */
-function buildWeekDays(selectedDate: Date, weekStartDay: Weekday): Date[] {
-  const { start } = getWeekRange(selectedDate, weekStartDay);
-  const days: Date[] = [];
-  const cursor = new Date(start);
-  for (let i = 0; i < 7; i++) {
-    days.push(new Date(cursor));
-    cursor.setUTCDate(cursor.getUTCDate() + 1);
-  }
-  return days;
 }
 
 /**
@@ -46,15 +35,25 @@ function buildWeekDays(selectedDate: Date, weekStartDay: Weekday): Date[] {
  * `selectedDate` on every render. `Prev`/`Next` disable themselves at the
  * 7-card boundary via the primitive's own state, so arriving past day 7
  * never rolls into the next week without extra guard code.
+ *
+ * §5.7 adds a "use the reference week" switch on `days[0]`'s card — always
+ * the `weekStartDay` day, per how `getWeekDays`/`getWeekRange` construct the
+ * array, no searching needed. `useReferenceWeek` is purely local UI state
+ * (nothing above needs to know the switch is on) and resets naturally on
+ * remount rather than being persisted.
  */
 export function WeekCarousel({
   selectedDate,
   weekStartDay,
   entriesByDate,
+  referenceWeek,
   onSelectDate,
   onSaved,
 }: WeekCarouselProps) {
-  const days = buildWeekDays(selectedDate, weekStartDay);
+  const { t } = useTranslation();
+  const [useReferenceWeek, setUseReferenceWeek] = useState(false);
+
+  const days = getWeekDays(selectedDate, weekStartDay);
   const selectedIso = toIsoDate(selectedDate);
   const activeIndex = days.findIndex((day) => toIsoDate(day) === selectedIso);
 
@@ -70,16 +69,47 @@ export function WeekCarousel({
       loop={false}
     >
       <CarouselContent>
-        {days.map((day) => (
-          <CarouselItem key={toIsoDate(day)} value={toIsoDate(day)}>
-            <DayCard
-              key={toIsoDate(day)}
-              date={day}
-              existingEntry={entriesByDate.get(toIsoDate(day))}
-              onSaved={onSaved}
-            />
-          </CarouselItem>
-        ))}
+        {days.map((day, index) => {
+          const iso = toIsoDate(day);
+          // §5.7: never overwrite an already-saved day — prefill only
+          // applies to a day with no existing entry yet.
+          const prefillEntry =
+            useReferenceWeek && !entriesByDate.get(iso)
+              ? referenceWeek?.days.find(
+                  (candidate) => candidate.weekday === getWeekdayForDate(day),
+                )
+              : undefined;
+
+          return (
+            <CarouselItem key={iso} value={iso}>
+              <DayCard
+                // Same remount idiom `DayCard` already relies on for its own
+                // `date`-keyed remount (see its doc comment): toggling the
+                // switch changes the key only for cards whose prefill state
+                // actually changed, forcing exactly those `DayCard`s to
+                // remount with fresh `defaultValues` computed from the new
+                // `prefillEntry` — not a `reset()`-in-`useEffect` path.
+                key={iso + (prefillEntry ? ":ref" : "")}
+                date={day}
+                existingEntry={entriesByDate.get(iso)}
+                prefillEntry={prefillEntry}
+                onSaved={onSaved}
+              />
+              {index === 0 && referenceWeek?.exists && (
+                <div className="mt-3 flex items-center gap-2">
+                  <ToggleButton
+                    pressed={useReferenceWeek}
+                    onPressedChange={(event) =>
+                      setUseReferenceWeek(event.pressed)
+                    }
+                  >
+                    {t("referenceWeek.useSwitchLabel")}
+                  </ToggleButton>
+                </div>
+              )}
+            </CarouselItem>
+          );
+        })}
       </CarouselContent>
       <div className="mt-3 flex items-center justify-center gap-2">
         <CarouselPrev />

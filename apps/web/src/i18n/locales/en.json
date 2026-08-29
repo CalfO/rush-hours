@@ -57,8 +57,24 @@
   "header": {
     "myProfile": "My profile",
     "myWorkSchedule": "My work week",
+    "deleteReferenceWeek": "Delete reference week",
     "logout": "Log out",
     "languageLabel": "Language"
+  },
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "genericError": "Something went wrong. Please try again."
+  },
+  "referenceWeek": {
+    "saveTitle": "Save as reference week?",
+    "saveDescription": "You've just completed this week. Do you want to save it as your reference week to prefill future entries?",
+    "saveDescriptionReplace": "You've just completed this week. Saving it as your reference week will replace the one you already have. Continue?",
+    "saveConfirm": "Yes, save",
+    "saveDecline": "No thanks",
+    "useSwitchLabel": "Use the reference week for the whole week",
+    "deleteConfirmTitle": "Delete the reference week?",
+    "deleteConfirmDescription": "This will permanently delete your saved reference week."
   },
   "timeEntry": {
     "dateLabel": "Date",

@@ -57,8 +57,24 @@
   "header": {
     "myProfile": "Mon profil",
     "myWorkSchedule": "Ma semaine de travail",
+    "deleteReferenceWeek": "Supprimer la semaine de référence",
     "logout": "Déconnexion",
     "languageLabel": "Langue"
+  },
+  "common": {
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "genericError": "Une erreur est survenue. Veuillez réessayer."
+  },
+  "referenceWeek": {
+    "saveTitle": "Enregistrer comme semaine de référence ?",
+    "saveDescription": "Vous venez de compléter cette semaine. Voulez-vous l'enregistrer comme semaine de référence pour préremplir vos prochaines saisies ?",
+    "saveDescriptionReplace": "Vous venez de compléter cette semaine. L'enregistrer comme semaine de référence remplacera celle déjà enregistrée. Continuer ?",
+    "saveConfirm": "Oui, enregistrer",
+    "saveDecline": "Non merci",
+    "useSwitchLabel": "Utiliser la semaine de référence pour toute la semaine",
+    "deleteConfirmTitle": "Supprimer la semaine de référence ?",
+    "deleteConfirmDescription": "Cette action supprimera définitivement votre semaine de référence enregistrée."
   },
   "timeEntry": {
     "dateLabel": "Date",
