@@ -23,6 +23,17 @@ import i18n from "../i18n/config";
  * primitive. This fake instead drives paging purely off the `slide`/
  * `onSlideChange` contract `WeekCarousel` itself wires up, which is exactly
  * what this file is testing (not the PrimeReact primitive's own scrolling).
+ * Like the real `PRCarousel.Content` (which renders every `CarouselItem`
+ * unconditionally and scrolls between them — confirmed by reading
+ * `node_modules/primereact/carousel/content/index.mjs`, no per-page
+ * conditional rendering there), this fake keeps *all* 7 `CarouselItem`s
+ * mounted at all times too, marking every non-active one `hidden` (an
+ * attribute Testing Library's `getByRole`/`queryByRole` already exclude by
+ * default, so every existing single-active-card query below is unaffected)
+ * rather than the simpler-but-unfaithful "only render the active item"
+ * shape this fake used before — that simplification is exactly what let the
+ * §5.7 remount-wipes-unsaved-input regression (below) go uncaught, since it
+ * can only reproduce with more than one `DayCard` genuinely mounted at once.
  *
  * Traceability:
  * - §3.1 "dans l'ordre déterminé par `user.weekStartDay`" (not hardcoded
@@ -81,7 +92,15 @@ vi.mock("./ui/carousel", () => {
   function CarouselContent({ children }: { children?: ReactNode }) {
     const { slide } = useContext(CarouselContext);
     const items = Children.toArray(children);
-    return <>{items[slide] ?? null}</>;
+    return (
+      <>
+        {items.map((item, index) => (
+          <div key={index} hidden={index !== slide}>
+            {item}
+          </div>
+        ))}
+      </>
+    );
   }
 
   function CarouselItem({ children }: { children?: ReactNode }) {
@@ -311,6 +330,12 @@ describe("WeekCarousel (spec §3.1)", () => {
  *   jamais écraser une saisie déjà enregistrée" -> "activating the switch
  *   prefills a day without an existing entry from the reference week, and
  *   never overwrites a day that already has one"
+ * - Regression (code review, not a direct spec line): the "never overwrite
+ *   an already-saved entry" guarantee above is about *saved* entries only —
+ *   it doesn't license discarding a day's in-progress, unsaved typing just
+ *   because that day also lacks a saved entry -> "a day with unsaved input
+ *   is not remounted/prefilled by the switch, while a genuinely untouched
+ *   day still is"
  */
 describe("WeekCarousel reference-week prefill switch (spec §5.7)", () => {
   function referenceWeekFixture(): ReferenceWeekState {
@@ -443,5 +468,92 @@ describe("WeekCarousel reference-week prefill switch (spec §5.7)", () => {
       </PrimeReactProvider>,
     );
     await waitFor(() => expect(activeArrivalValue()).toBe("09:15"));
+  });
+
+  test("a day with unsaved input is not remounted/prefilled by the switch, while a genuinely untouched day still is", async () => {
+    const user = userEvent.setup();
+    const entries = buildEntries();
+    // Thursday (index 1) has no saved entry -- the user types into it
+    // without saving, then navigates to the weekStartDay's card (where the
+    // switch lives) and flips it on from there.
+    entries.delete(WEEK_DATES[1]);
+    // Saturday (index 3) also has no saved entry, but stays untouched -- the
+    // control case that must still receive the prefill exactly as before
+    // this fix.
+    entries.delete(WEEK_DATES[3]);
+    const referenceWeek = referenceWeekFixture();
+
+    const { rerender } = renderAt(WEEK_DATES[1], entries, referenceWeek);
+
+    // Pick an Arrival hour for Thursday via the picker's hour grid (the
+    // same interaction `DayCard.test.tsx` exercises) -- without saving.
+    await user.click(screen.getByRole("combobox", { name: "Arrival" }));
+    await screen.findByRole("dialog");
+    await user.click(screen.getByRole("button", { name: "Choose hour" }));
+    await screen.findByRole("listbox", { name: "Choose hour" });
+    await user.click(screen.getByRole("option", { name: "16" }));
+
+    // Captured rather than hardcoded: the minute half of the picked value
+    // isn't under this test's control (no existing entry to pick a minute
+    // relative to), only that Thursday's own typed hour applied.
+    const typedValue = await waitFor(() => {
+      const value = activeArrivalValue();
+      expect(value).toMatch(/^16:\d{2}$/);
+      return value as string;
+    });
+
+    // Navigate to the weekStartDay's card (index 0) to reach the switch.
+    // Thursday's `DayCard` stays mounted underneath (only hidden), exactly
+    // like the real PrimeReact `Carousel`, which never unmounts off-screen
+    // items -- see the mock's own doc comment above.
+    rerender(
+      <PrimeReactProvider>
+        <WeekCarousel
+          selectedDate={new Date(`${WEEK_DATES[0]}T00:00:00.000Z`)}
+          weekStartDay={WEEK_START}
+          entriesByDate={entries}
+          referenceWeek={referenceWeek}
+          onSelectDate={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </PrimeReactProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: SWITCH_NAME }));
+
+    // The untouched control day (Saturday) still gets prefilled from the
+    // reference week exactly as before this fix (9:00 + 3*5min = 09:15).
+    rerender(
+      <PrimeReactProvider>
+        <WeekCarousel
+          selectedDate={new Date(`${WEEK_DATES[3]}T00:00:00.000Z`)}
+          weekStartDay={WEEK_START}
+          entriesByDate={entries}
+          referenceWeek={referenceWeek}
+          onSelectDate={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </PrimeReactProvider>,
+    );
+    await waitFor(() => expect(activeArrivalValue()).toBe("09:15"));
+
+    // Back on Thursday: the switch is on and Thursday has no saved entry
+    // (otherwise prefill-eligible), but its unsaved typed value must have
+    // survived untouched -- not reverted to the reference week's own
+    // THURSDAY value (09:05, per `referenceWeekFixture()`) and not blanked
+    // by a remount.
+    rerender(
+      <PrimeReactProvider>
+        <WeekCarousel
+          selectedDate={new Date(`${WEEK_DATES[1]}T00:00:00.000Z`)}
+          weekStartDay={WEEK_START}
+          entriesByDate={entries}
+          referenceWeek={referenceWeek}
+          onSelectDate={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </PrimeReactProvider>,
+    );
+    expect(activeArrivalValue()).toBe(typedValue);
   });
 });

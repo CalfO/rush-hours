@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getWeekdayForDate, type Weekday } from "@rushhours/domain";
 import { getWeekDays, toIsoDate } from "../lib/date";
@@ -41,6 +41,17 @@ interface WeekCarouselProps {
  * array, no searching needed. `useReferenceWeek` is purely local UI state
  * (nothing above needs to know the switch is on) and resets naturally on
  * remount rather than being persisted.
+ *
+ * `touchedDays` guards the remount-via-`key` idiom below against destroying
+ * unsaved input: a card the user has started typing into (RHF's own
+ * `isDirty`, reported via `DayCard`'s `onDirtyChange`) is excluded from the
+ * `:ref`-suffixed key even when it would otherwise be prefill-eligible, so
+ * flipping the switch never remounts — and thus never wipes — a day someone
+ * is actively filling in but hasn't saved yet. The spec's "never overwrite
+ * an already-saved entry" guarantee is about *saved* entries; it says
+ * nothing that would justify discarding in-progress unsaved input on an
+ * unrelated day, so a touched-but-unsaved card simply doesn't receive the
+ * prefill while it stays dirty — the correct trade-off here.
  */
 export function WeekCarousel({
   selectedDate,
@@ -52,6 +63,26 @@ export function WeekCarousel({
 }: WeekCarouselProps) {
   const { t } = useTranslation();
   const [useReferenceWeek, setUseReferenceWeek] = useState(false);
+  const [touchedDays, setTouchedDays] = useState<Set<string>>(new Set());
+
+  // Stable across renders (functional `setState`, react-best-practices #3)
+  // so it isn't a fresh function identity on every `WeekCarousel` render —
+  // `DayCard`'s own dirty-watching effect depends on the callback it's
+  // given, so a stable reference here avoids that effect re-firing for no
+  // reason.
+  const handleDirtyChange = useCallback((iso: string, dirty: boolean) => {
+    setTouchedDays((curr) => {
+      const alreadyTouched = curr.has(iso);
+      if (dirty === alreadyTouched) return curr;
+      const next = new Set(curr);
+      if (dirty) {
+        next.add(iso);
+      } else {
+        next.delete(iso);
+      }
+      return next;
+    });
+  }, []);
 
   const days = getWeekDays(selectedDate, weekStartDay);
   const selectedIso = toIsoDate(selectedDate);
@@ -79,6 +110,12 @@ export function WeekCarousel({
                   (candidate) => candidate.weekday === getWeekdayForDate(day),
                 )
               : undefined;
+          // A card with unsaved (dirty) input never gets the `:ref` suffix,
+          // regardless of prefill eligibility — see the component doc
+          // comment above. It keeps its plain `iso` key, so it never
+          // remounts from this switch and its in-progress state survives.
+          const eligibleForPrefillKey =
+            prefillEntry !== undefined && !touchedDays.has(iso);
 
           return (
             <CarouselItem key={iso} value={iso}>
@@ -89,11 +126,12 @@ export function WeekCarousel({
                 // actually changed, forcing exactly those `DayCard`s to
                 // remount with fresh `defaultValues` computed from the new
                 // `prefillEntry` — not a `reset()`-in-`useEffect` path.
-                key={iso + (prefillEntry ? ":ref" : "")}
+                key={iso + (eligibleForPrefillKey ? ":ref" : "")}
                 date={day}
                 existingEntry={entriesByDate.get(iso)}
                 prefillEntry={prefillEntry}
                 onSaved={onSaved}
+                onDirtyChange={(dirty) => handleDirtyChange(iso, dirty)}
               />
               {index === 0 && referenceWeek?.exists && (
                 <div className="mt-3 flex items-center gap-2">

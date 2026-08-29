@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Controller,
@@ -35,6 +35,16 @@ interface DayCardProps {
    */
   prefillEntry?: ReferenceWeekDayInput;
   onSaved: (entry: TimeEntryRecord) => void;
+  /**
+   * Reported whenever RHF's own `formState.isDirty` changes (react-hook-form
+   * is the source of truth for "has the user typed something not yet
+   * saved" — no separate dirty tracking is introduced here). `WeekCarousel`
+   * uses this to avoid remounting a card that has unsaved input when the
+   * §5.7 reference-week switch flips (see its own doc comment) — a card the
+   * user is actively typing into must never lose that input to a prefill
+   * remount.
+   */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 /**
@@ -211,6 +221,7 @@ export function DayCard({
   existingEntry,
   prefillEntry,
   onSaved,
+  onDirtyChange,
 }: DayCardProps) {
   const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -240,6 +251,13 @@ export function DayCard({
           : null,
     },
   });
+
+  // Reports RHF's own dirty flag up to the caller (react-best-practices #6 —
+  // narrowed to the one primitive this effect actually needs, not the whole
+  // `formState` object, which changes identity on every keystroke).
+  useEffect(() => {
+    onDirtyChange?.(formState.isDirty);
+  }, [formState.isDirty, onDirtyChange]);
 
   const onSubmit: SubmitHandler<DayFormValues> = async (values) => {
     setSubmitError(null);
