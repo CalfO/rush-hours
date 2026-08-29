@@ -26,8 +26,12 @@
 7. ✅ **Lot B — sélecteur de langue** (§6) — `ToggleButtonGroup`, confirmé visuellement fonctionnel (FR/EN en boutons). Implémentation commitée `f3eb64a`, tests `dev-tester` commités `5da29df` (93 tests verts). **Review reçue : clean, 0 finding bloquant.** 3 notes non-bloquantes signalées (aria-label manquant sur le trigger de la grille d'heures, pas de cleanup sur le `setTimeout` de contournement, couverture de test du wiring réel du Carousel PrimeReact incomplète) — les deux premières corrigées directement par l'orchestrateur (aria-label + `useRef`/`clearTimeout`, tests ajustés en conséquence), 93 tests toujours verts. La 3e (couverture carousel) notée comme dette technique mineure, non traitée. **Lot B terminé.**
 8. ✅ **Lot C — semaine de référence front** — `src/api/reference-week.ts`, `ui/ConfirmDialog.tsx` (générique, réutilisé pour le popup §5.5 et la suppression §5.6), état `referenceWeek` remonté dans `AppLayout` (fetch-once + `refreshReferenceWeek`, exposé via `Outlet context`), détection de complétion de semaine dans `TimeEntryPage.handleSaved` (transition `wasComplete`→`isComplete`, flag localStorage, limite documentée semaine à cheval sur deux mois — cf. §9), item de menu masqué dans `Header`, switch de préremplissage non-destructif dans `WeekCarousel`/`DayCard`. Commit `8a0ea81`. **Vérifié bout en bout par l'orchestrateur en navigateur** (compte à 5 jours travaillés) : popup déclenché exactement sur la saisie complétant la semaine, item menu + switch apparaissent sans reload, préremplissage confirmé. `dev-tester` a ajouté 15 tests (transition du popup avec fixture 3-jours pour ne pas figer sur 5/7, propagation cross-sibling via `AppLayout` réel, non-écrasement du switch, masquage du menu) — 108 tests web verts, lint/build clean. **Pas encore de review reviewer** — prochaine étape.
 9. ✅ **i18n** — clés `referenceWeek.*`/`header.deleteReferenceWeek`/`common.*` ajoutées FR+EN dans le cadre du Lot C.
-10. ✅ **Qualité** — lint/build/test verts sur `web` (108 tests) et `api`/`domain` (inchangés depuis Lot A).
-11. ⬜ **Vérification manuelle bout en bout** finale (tous lots combinés, une fois la review du Lot C passée).
+10. ✅ **Qualité** — `npm run build`/`npm run test` racine (3 workspaces) + `npm run test:e2e --workspace api` tous verts après le fix du finding switch/dirty-state : 44 tests unitaires api + 51 e2e api + 42 tests domain + 109 tests web = **246 tests verts**, lint/build clean partout.
+11. ✅ **Vérification manuelle bout en bout** — faite progressivement à chaque lot par l'orchestrateur en navigateur réel (Postgres local + WebAuthn virtuel CDP Playwright), pas en une passe finale isolée : placeholder heure, padding modales, carousel + calendrier + input calendrier synchronisés, popover heures/minutes +/-, grille d'heures 24 cases (2 bugs trouvés et corrigés), sélecteur de langue FR/EN, flux complet semaine de référence (popup de proposition déclenché exactement sur la saisie complétante, item menu + switch apparaissant sans reload, préremplissage sans écrasement) — tous confirmés fonctionnels en conditions réelles, pas seulement via les tests automatisés.
+
+## Initiative terminée
+
+Les 6 points fonctionnels du spec (placeholder, carousel, saisie d'heure simplifiée, semaine de référence, sélecteur de langue, padding modales) sont implémentés, testés et revus. 3 points de dette technique mineure acceptés (non bloquants, documentés dans "Review reçue (Lot C)" ci-dessus) — à traiter dans une future itération si besoin, pas avant. Spec déplacée vers `prompts/spec/done/` (convention déjà établie par ce repo pour `rushhours-full-spec.md`).
 
 ## État git actuel
 
@@ -44,8 +48,4 @@ Le reviewer a re-vérifié indépendamment build/lint/test (108 tests confirmés
 
 ## Prochaines étapes immédiates
 
-1. Committer le fix du finding #1 (switch/dirty-state) une fois reçu de `senior-developer`.
-2. Vérification manuelle bout en bout finale (tous lots), clôturer l'initiative.
-3. `npm run build`/`test`/`lint` racine sur les 3 workspaces en une passe finale.
-3. `senior-developer` → `dev-tester` → `reviewer` sur le Lot A, commit.
-4. Enchaîner sur le Lot B puis le Lot C.
+Aucune — initiative terminée (voir "Initiative terminée" ci-dessus). Reprendre uniquement si un des 3 points de dette technique acceptés doit être traité, ou pour une nouvelle évolution du spec.
