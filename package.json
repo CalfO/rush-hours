@@ -4,7 +4,8 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "e2e"
   ],
   "scripts": {
     "predev": "npm run build --workspace @rushhours/domain",
@@ -15,6 +16,7 @@
     "build": "npm run build --workspaces --if-present",
     "pretest": "npm run build --workspace @rushhours/domain",
     "test": "npm run test --workspaces --if-present",
+    "test:e2e:browser": "npm run e2e --workspace e2e",
     "lint": "npm run lint --workspaces --if-present",
     "prisma:generate": "npm run prisma:generate --workspace api",
     "prisma:migrate": "npm run prisma:migrate --workspace api"
