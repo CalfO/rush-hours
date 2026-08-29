@@ -33,10 +33,19 @@
 
 - Branche `feature/hours-input`, dernier commit poussé `8a0ea81` ("feat(web): reference week save-prompt, deletion, prefill switch (Lot C)"). Tests `dev-tester` du Lot C implémentés, validés localement, pas encore commités.
 
+## Review reçue (Lot C) — 0 finding bloquant, 1 corrigé, 3 dette technique acceptée
+
+Le reviewer a re-vérifié indépendamment build/lint/test (108 tests confirmés), et tracé la conversion minutes du paiement PUT contre `reference-week.schema.ts` (compatible, puisque déjà validée par `timeEntrySchema` en amont dans `DayCard`).
+
+- **✅ Corrigé (envoyé à `senior-developer`)** : activer le switch remonte (via changement de `key`) **toutes** les cards non-sauvegardées de la semaine simultanément — si l'utilisateur avait commencé à taper (sans enregistrer) dans une autre card que celle du switch, cette saisie était silencieusement perdue au remount. Fix : `DayCard` remonte son état "dirty" (`formState.isDirty`) via un nouveau prop `onDirtyChange`, `WeekCarousel` exclut les jours "touchés" du remount de préremplissage (garde la clé `iso` simple, pas de suffixe `:ref`) — une card en cours de saisie non sauvegardée n'est jamais écrasée.
+- **⚠️ Dette technique acceptée, non corrigée** : `handleSaved`'s garde "dernière requête gagne" (héritée du Lot B) peut, dans une fenêtre de timing étroite (deux sauvegardes sur deux semaines différentes coup sur coup), abandonner l'évaluation de complétion d'une semaine sans réessai — le popup ne se déclenche alors jamais pour cette semaine-là.
+- **⚠️ Dette technique acceptée, non corrigée** : le flag localStorage "déjà répondu" (refus) n'est jamais effacé — si la config `WorkingDaySchedule` change après un refus et fait redevenir la semaine incomplète puis à nouveau complète, le popup ne se redéclenche pas alors que le spec §5.5 (dernière phrase) le prévoit.
+- **⚠️ Dette technique acceptée, non corrigée** : `AppLayout.refreshReferenceWeek` n'a pas de garde de séquencement de requêtes (contrairement au `refreshSequence` déjà établi ailleurs dans ce repo) — deux appels concurrents (accepter le popup + supprimer depuis le menu, coup sur coup) pourraient laisser gagner la réponse la plus ancienne. S'auto-corrige au prochain refresh explicite.
+
 ## Prochaines étapes immédiates
 
-1. Committer les tests Lot C.
-2. `reviewer` sur le Lot C complet, corriger si besoin.
-3. Vérification manuelle bout en bout finale (tous lots), clôturer l'initiative.
+1. Committer le fix du finding #1 (switch/dirty-state) une fois reçu de `senior-developer`.
+2. Vérification manuelle bout en bout finale (tous lots), clôturer l'initiative.
+3. `npm run build`/`test`/`lint` racine sur les 3 workspaces en une passe finale.
 3. `senior-developer` → `dev-tester` → `reviewer` sur le Lot A, commit.
 4. Enchaîner sur le Lot B puis le Lot C.
