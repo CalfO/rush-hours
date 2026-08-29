@@ -64,6 +64,7 @@
   "common": {
     "confirm": "Confirmer",
     "cancel": "Annuler",
+    "close": "Fermer",
     "genericError": "Une erreur est survenue. Veuillez réessayer."
   },
   "referenceWeek": {
@@ -93,7 +94,15 @@
     "monthTotalLabel": "Total du mois",
     "previousMonth": "Mois précédent",
     "nextMonth": "Mois suivant",
-    "noWorkingDays": "Aucun jour travaillé n'est configuré. Renseignez votre semaine de travail depuis le menu utilisateur."
+    "noWorkingDays": "Aucun jour travaillé n'est configuré. Renseignez votre semaine de travail depuis le menu utilisateur.",
+    "previousDay": "Jour précédent",
+    "nextDay": "Jour suivant",
+    "incrementLabel": "Augmenter",
+    "decrementLabel": "Diminuer",
+    "incrementHourLabel": "Augmenter l'heure",
+    "decrementHourLabel": "Diminuer l'heure",
+    "incrementMinuteLabel": "Augmenter les minutes",
+    "decrementMinuteLabel": "Diminuer les minutes"
   },
   "analytics": {
     "title": "Analyses",

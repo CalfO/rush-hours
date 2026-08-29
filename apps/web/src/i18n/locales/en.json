@@ -64,6 +64,7 @@
   "common": {
     "confirm": "Confirm",
     "cancel": "Cancel",
+    "close": "Close",
     "genericError": "Something went wrong. Please try again."
   },
   "referenceWeek": {
@@ -93,7 +94,15 @@
     "monthTotalLabel": "Month total",
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
-    "noWorkingDays": "No working days are configured. Set up your work schedule from the user menu."
+    "noWorkingDays": "No working days are configured. Set up your work schedule from the user menu.",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "incrementLabel": "Increase",
+    "decrementLabel": "Decrease",
+    "incrementHourLabel": "Increase hour",
+    "decrementHourLabel": "Decrease hour",
+    "incrementMinuteLabel": "Increase minute",
+    "decrementMinuteLabel": "Decrease minute"
   },
   "analytics": {
     "title": "Analytics",

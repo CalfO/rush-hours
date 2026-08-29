@@ -336,16 +336,40 @@ function TimePicker({
   type: "hour" | "minute" | "second" | "ampm";
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
+  // Only "hour"/"minute" are ever actually rendered by this app (hourFormat
+  // is always "24", showSeconds is never passed, see `DatePickerTime`
+  // above) -- "second"/"ampm" fall back to the generic label rather than
+  // carrying their own unused translation keys.
+  const incrementLabel =
+    type === "hour"
+      ? t("timeEntry.incrementHourLabel")
+      : type === "minute"
+        ? t("timeEntry.incrementMinuteLabel")
+        : t("timeEntry.incrementLabel");
+  const decrementLabel =
+    type === "hour"
+      ? t("timeEntry.decrementHourLabel")
+      : type === "minute"
+        ? t("timeEntry.decrementMinuteLabel")
+        : t("timeEntry.decrementLabel");
+
   return (
     <PRDatePicker.Picker
       type={type}
       className="flex flex-col items-center gap-0.5"
     >
-      <PRDatePicker.Increment className={timeChevronButtonClass}>
+      <PRDatePicker.Increment
+        aria-label={incrementLabel}
+        className={timeChevronButtonClass}
+      >
         <ChevronUp />
       </PRDatePicker.Increment>
       {children}
-      <PRDatePicker.Decrement className={timeChevronButtonClass}>
+      <PRDatePicker.Decrement
+        aria-label={decrementLabel}
+        className={timeChevronButtonClass}
+      >
         <ChevronDown />
       </PRDatePicker.Decrement>
     </PRDatePicker.Picker>
@@ -553,6 +577,7 @@ function DatePickerCalendar({
   index = 0,
   ...props
 }: DatePickerCalendarProps2) {
+  const { t } = useTranslation();
   const datepicker = useDatePickerContext();
   const monthName = datepicker?.getMonthName?.(
     datepicker?.getIndexedMonth?.(index)?.month ?? 0,
@@ -570,6 +595,7 @@ function DatePickerCalendar({
       <PRDatePicker.Header className="flex items-center justify-between text-surface-700 dark:text-surface-0">
         {showPrev ? (
           <PRDatePicker.Prev
+            aria-label={t("timeEntry.previousMonth")}
             className={buttonVariants({
               variant: "text",
               severity: "secondary",
@@ -603,6 +629,7 @@ function DatePickerCalendar({
         </PRDatePicker.Title>
         {showNext ? (
           <PRDatePicker.Next
+            aria-label={t("timeEntry.nextMonth")}
             className={buttonVariants({
               variant: "text",
               severity: "secondary",

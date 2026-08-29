@@ -1,5 +1,6 @@
 import { Times } from "@primeicons/react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogBackdrop,
@@ -48,6 +49,8 @@ export function Modal({
   dismissible = true,
   children,
 }: ModalProps) {
+  const { t } = useTranslation();
+
   return (
     <Dialog
       open={open}
@@ -63,7 +66,7 @@ export function Modal({
               <DialogTitle>{title}</DialogTitle>
               {dismissible && (
                 <DialogHeaderActions>
-                  <DialogClose aria-label="Close">
+                  <DialogClose aria-label={t("common.close")}>
                     <Times />
                   </DialogClose>
                 </DialogHeaderActions>

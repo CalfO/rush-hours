@@ -178,8 +178,8 @@ export function WeekCarousel({
         })}
       </CarouselContent>
       <div className="mt-3 flex items-center justify-center gap-2">
-        <CarouselPrev />
-        <CarouselNext />
+        <CarouselPrev aria-label={t("timeEntry.previousDay")} />
+        <CarouselNext aria-label={t("timeEntry.nextDay")} />
       </div>
     </Carousel>
   );
