@@ -4,8 +4,9 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PrimeReactProvider } from "@primereact/core";
-import type { Weekday } from "@rushhours/domain";
+import { getWeekdayForDate, type Weekday } from "@rushhours/domain";
 import { WeekCarousel } from "./WeekCarousel";
+import type { ReferenceWeekState } from "../api/reference-week";
 import type { TimeEntryRecord } from "../api/time-entries";
 import i18n from "../i18n/config";
 
@@ -293,5 +294,154 @@ describe("WeekCarousel (spec §3.1)", () => {
         .getByRole("button", { name: "Previous day" })
         .hasAttribute("disabled"),
     ).toBe(true);
+  });
+});
+
+/**
+ * Spec §5.7 (`time-entry-ux-and-reference-week.md`) — the "use the
+ * reference week" prefill switch. Reuses the same WEDNESDAY-first
+ * (`WEEK_START`) fixture as the §3.1 suite above, so this coverage also
+ * doubles as another instance of a non-Monday `weekStartDay`.
+ *
+ * Traceability:
+ * - §5.7 "sur la card du weekStartDay ... visible uniquement si une semaine
+ *   de référence existe" -> "only renders on the weekStartDay's card, and
+ *   only when a reference week exists"
+ * - §5.7 "préremplit ... qui n'a pas déjà de saisie enregistrée" + "ne
+ *   jamais écraser une saisie déjà enregistrée" -> "activating the switch
+ *   prefills a day without an existing entry from the reference week, and
+ *   never overwrites a day that already has one"
+ */
+describe("WeekCarousel reference-week prefill switch (spec §5.7)", () => {
+  function referenceWeekFixture(): ReferenceWeekState {
+    return {
+      exists: true,
+      days: WEEK_DATES.map((date, index) => ({
+        weekday: getWeekdayForDate(new Date(`${date}T00:00:00.000Z`)),
+        // Deliberately different from `buildEntries()`'s own "08:0<n>"
+        // arrival times, so a test can tell "prefilled from the reference
+        // week" apart from "coincidentally already matching".
+        arrivalMinutes: 9 * 60 + index * 5,
+        departureMinutes: 18 * 60,
+        lunchBreakStartMinutes: 12 * 60,
+        lunchBreakEndMinutes: 13 * 60,
+      })),
+    };
+  }
+
+  function renderAt(
+    selectedIso: string,
+    entriesByDate: Map<string, TimeEntryRecord>,
+    referenceWeek: ReferenceWeekState | null,
+  ) {
+    return render(
+      <PrimeReactProvider>
+        <WeekCarousel
+          selectedDate={new Date(`${selectedIso}T00:00:00.000Z`)}
+          weekStartDay={WEEK_START}
+          entriesByDate={entriesByDate}
+          referenceWeek={referenceWeek}
+          onSelectDate={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </PrimeReactProvider>,
+    );
+  }
+
+  const SWITCH_NAME = "Use the reference week for the whole week";
+
+  test("only renders on the weekStartDay's card, and only when a reference week exists", () => {
+    const entries = buildEntries();
+
+    const { unmount: unmount1 } = renderAt(WEEK_DATES[0], entries, null);
+    expect(screen.queryByRole("button", { name: SWITCH_NAME })).toBeNull();
+    unmount1();
+
+    const { unmount: unmount2 } = renderAt(WEEK_DATES[0], entries, {
+      exists: false,
+      days: [],
+    });
+    expect(screen.queryByRole("button", { name: SWITCH_NAME })).toBeNull();
+    unmount2();
+
+    const { rerender, unmount: unmount3 } = renderAt(
+      WEEK_DATES[0],
+      entries,
+      referenceWeekFixture(),
+    );
+    expect(screen.getByRole("button", { name: SWITCH_NAME })).toBeDefined();
+
+    // Index 1 (Thursday) is not the weekStartDay's card -> no switch there,
+    // even though a reference week exists.
+    rerender(
+      <PrimeReactProvider>
+        <WeekCarousel
+          selectedDate={new Date(`${WEEK_DATES[1]}T00:00:00.000Z`)}
+          weekStartDay={WEEK_START}
+          entriesByDate={entries}
+          referenceWeek={referenceWeekFixture()}
+          onSelectDate={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </PrimeReactProvider>,
+    );
+    expect(screen.queryByRole("button", { name: SWITCH_NAME })).toBeNull();
+    unmount3();
+  });
+
+  test("activating the switch prefills a day without an existing entry from the reference week, and never overwrites a day that already has one", async () => {
+    const user = userEvent.setup();
+    const entries = buildEntries();
+    // Saturday (index 3) has no saved entry yet -- the only day this
+    // switch is allowed to touch.
+    entries.delete(WEEK_DATES[3]);
+    const referenceWeek = referenceWeekFixture();
+
+    const { rerender } = renderAt(WEEK_DATES[0], entries, referenceWeek);
+
+    // Sanity: index 0 (Wednesday, the weekStartDay) already has a saved
+    // entry ("08:00", from `buildEntries()`).
+    expect(activeArrivalValue()).toBe("08:00");
+
+    await user.click(screen.getByRole("button", { name: SWITCH_NAME }));
+
+    // Turning the switch on must not retroactively touch the
+    // weekStartDay's own already-saved card.
+    expect(activeArrivalValue()).toBe("08:00");
+
+    // Thursday (index 1) also already has a saved entry ("08:05") -- it
+    // must stay untouched even though the reference week has a different
+    // value (09:05) for THURSDAY. The switch is still "on" here: it's the
+    // same `WeekCarousel` instance, `useReferenceWeek` is local state that
+    // survives this prop-only re-render.
+    rerender(
+      <PrimeReactProvider>
+        <WeekCarousel
+          selectedDate={new Date(`${WEEK_DATES[1]}T00:00:00.000Z`)}
+          weekStartDay={WEEK_START}
+          entriesByDate={entries}
+          referenceWeek={referenceWeek}
+          onSelectDate={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </PrimeReactProvider>,
+    );
+    await waitFor(() => expect(activeArrivalValue()).toBe("08:05"));
+
+    // Saturday (index 3) has no saved entry -> gets prefilled from the
+    // reference week's own SATURDAY value (9:00 + 3*5min = 09:15).
+    rerender(
+      <PrimeReactProvider>
+        <WeekCarousel
+          selectedDate={new Date(`${WEEK_DATES[3]}T00:00:00.000Z`)}
+          weekStartDay={WEEK_START}
+          entriesByDate={entries}
+          referenceWeek={referenceWeek}
+          onSelectDate={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </PrimeReactProvider>,
+    );
+    await waitFor(() => expect(activeArrivalValue()).toBe("09:15"));
   });
 });

@@ -15,7 +15,7 @@ import type { WorkScheduleInput } from "@rushhours/domain";
 import AppLayout from "./AppLayout";
 import { useAuth } from "../auth/AuthProvider";
 import { getWorkSchedule, putWorkSchedule, updateProfile } from "../api/users";
-import { getReferenceWeek } from "../api/reference-week";
+import { getReferenceWeek, deleteReferenceWeek } from "../api/reference-week";
 import type { AuthUser } from "../api/auth";
 import i18n from "../i18n/config";
 
@@ -260,5 +260,78 @@ describe("Header (spec §7.1)", () => {
     await user.click(await screen.findByRole("menuitem", { name: "Log out" }));
 
     await waitFor(() => expect(logout).toHaveBeenCalledTimes(1));
+  });
+
+  /**
+   * Spec §5.6 — "Supprimer la semaine de référence" menu item.
+   *
+   * Traceability:
+   * - "Visible uniquement si une semaine de référence existe ... le
+   *   masquer plutôt que le désactiver s'il n'y en a pas" -> "the delete
+   *   reference week menu item is absent (not merely disabled) when no
+   *   reference week exists, and present when one does"
+   * - "Au clic -> ConfirmDialog ... -> DELETE ... -> rafraîchir l'état
+   *   exists (et masquer l'item)" -> "confirming deletion calls DELETE
+   *   /users/me/reference-week, refreshes the shared state, and the menu
+   *   item disappears immediately"
+   */
+  test("the delete reference week menu item is absent (not merely disabled) when no reference week exists", async () => {
+    vi.mocked(getReferenceWeek).mockResolvedValue({ exists: false, days: [] });
+    renderHeader();
+    const user = userEvent.setup();
+
+    await openAvatarMenu(user);
+    // Give the fetch-once effect a turn to resolve before asserting
+    // absence, so this isn't just "hasn't rendered yet".
+    await screen.findByRole("menuitem", { name: "My profile" });
+    expect(
+      screen.queryByRole("menuitem", { name: "Delete reference week" }),
+    ).toBeNull();
+    expect(screen.queryByText("Delete reference week")).toBeNull();
+  });
+
+  test("the delete reference week menu item is present once a reference week exists", async () => {
+    vi.mocked(getReferenceWeek).mockResolvedValue({ exists: true, days: [] });
+    renderHeader();
+    const user = userEvent.setup();
+
+    await openAvatarMenu(user);
+    expect(
+      await screen.findByRole("menuitem", { name: "Delete reference week" }),
+    ).toBeDefined();
+  });
+
+  test("confirming deletion from the menu calls DELETE, refreshes the shared state, and the menu item disappears without a page reload", async () => {
+    vi.mocked(getReferenceWeek)
+      .mockResolvedValueOnce({ exists: true, days: [] }) // AppLayout's initial fetch
+      .mockResolvedValueOnce({ exists: false, days: [] }); // refreshReferenceWeek() after delete
+    vi.mocked(deleteReferenceWeek).mockResolvedValue({ success: true });
+    renderHeader();
+    const user = userEvent.setup();
+
+    await openAvatarMenu(user);
+    await user.click(
+      await screen.findByRole("menuitem", {
+        name: "Delete reference week",
+      }),
+    );
+
+    // The shared `ConfirmDialog` (spec §5.5/§5.6, same component as the
+    // save-prompt) opens with the deletion-specific copy.
+    expect(await screen.findByText("Delete the reference week?")).toBeDefined();
+    await user.click(screen.getByRole("button", { name: "Confirm" }));
+
+    await waitFor(() => expect(deleteReferenceWeek).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(getReferenceWeek).toHaveBeenCalledTimes(2));
+
+    // The item disappears immediately, in this same render tree (no
+    // navigation/reload happened) -- re-opening the still-mounted menu no
+    // longer shows it.
+    await openAvatarMenu(user);
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("menuitem", { name: "Delete reference week" }),
+      ).toBeNull(),
+    );
   });
 });
