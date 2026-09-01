@@ -1,0 +1,131 @@
+{
+  "app": {
+    "title": "RushHours"
+  },
+  "nav": {
+    "entry": "Time entry",
+    "analytics": "Analytics"
+  },
+  "auth": {
+    "title": "Login",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "user or admin",
+    "continue": "Continue",
+    "offerRegisterMessage": "No passkey is enrolled for this account yet.",
+    "offerRegisterButton": "Create your passkey for this account",
+    "genericError": "Something went wrong. Please try again.",
+    "ceremonyError": "The operation was cancelled or failed. Please try again."
+  },
+  "weekdays": {
+    "MONDAY": "Monday",
+    "TUESDAY": "Tuesday",
+    "WEDNESDAY": "Wednesday",
+    "THURSDAY": "Thursday",
+    "FRIDAY": "Friday",
+    "SATURDAY": "Saturday",
+    "SUNDAY": "Sunday"
+  },
+  "workSchedule": {
+    "title": "My work week",
+    "weeklyHoursLabel": "Weekly contract hours",
+    "quickPickLabel": "Quick picks",
+    "workingDaysLabel": "Working days",
+    "distributionLabel": "Hours distribution per day",
+    "weekStartDayLabel": "Week start day",
+    "deltaMatch": "The distribution matches the weekly total.",
+    "deltaMismatch": "{{minutes}} minute(s) off the weekly total.",
+    "incompleteCheckedDay": "Enter a number of hours for every checked day.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading your work week…",
+    "loadError": "Couldn't load your work week. Please try again.",
+    "saveError": "Couldn't save your work week. Please try again."
+  },
+  "profile": {
+    "title": "My profile",
+    "firstNameLabel": "First name",
+    "lastNameLabel": "Last name",
+    "emailLabel": "Email",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveError": "Couldn't save your profile. Please try again."
+  },
+  "onboarding": {
+    "continue": "Continue",
+    "stepIndicator": "Step {{current}} of {{total}}"
+  },
+  "header": {
+    "myProfile": "My profile",
+    "myWorkSchedule": "My work week",
+    "deleteReferenceWeek": "Delete reference week",
+    "logout": "Log out",
+    "languageLabel": "Language"
+  },
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "close": "Close",
+    "genericError": "Something went wrong. Please try again."
+  },
+  "referenceWeek": {
+    "saveTitle": "Save as reference week?",
+    "saveDescription": "You've just completed this week. Do you want to save it as your reference week to prefill future entries?",
+    "saveDescriptionReplace": "You've just completed this week. Saving it as your reference week will replace the one you already have. Continue?",
+    "saveConfirm": "Yes, save",
+    "saveDecline": "No thanks",
+    "useSwitchLabel": "Use the reference week for the whole week",
+    "deleteConfirmTitle": "Delete the reference week?",
+    "deleteConfirmDescription": "This will permanently delete your saved reference week."
+  },
+  "timeEntry": {
+    "dateLabel": "Date",
+    "timePlaceholder": "hh:mm",
+    "hourGridLabel": "Choose hour",
+    "arrivalTimeLabel": "Arrival",
+    "departureTimeLabel": "Departure",
+    "lunchBreakStartLabel": "Lunch break start",
+    "lunchBreakEndLabel": "Lunch break end",
+    "save": "Save",
+    "saveError": "Couldn't save this day. Please try again.",
+    "loading": "Loading…",
+    "loadError": "Couldn't load your time entries. Please try again.",
+    "dayIndicatorLabel": "Day balance",
+    "weekIndicatorLabel": "Week balance",
+    "monthTotalLabel": "Month total",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "noWorkingDays": "No working days are configured. Set up your work schedule from the user menu.",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "incrementLabel": "Increase",
+    "decrementLabel": "Decrease",
+    "incrementHourLabel": "Increase hour",
+    "decrementHourLabel": "Decrease hour",
+    "incrementMinuteLabel": "Increase minute",
+    "decrementMinuteLabel": "Decrease minute"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "range": "Period: {{from}} → {{to}}",
+    "periodLabel": "Analytics period",
+    "month": "Month",
+    "week": "Week",
+    "custom": "Custom range",
+    "referenceDate": "Reference date",
+    "from": "From",
+    "to": "To",
+    "invalidRange": "The start date must be on or before the end date.",
+    "loading": "Loading analytics…",
+    "loadError": "Couldn't load your analytics. Please try again.",
+    "empty": "No time entries for the selected period.",
+    "dailyTitle": "Hours worked per day",
+    "dailyChart": "Chart of hours worked per day",
+    "balanceTitle": "Cumulative balance trend",
+    "balanceChart": "Chart of the cumulative balance trend",
+    "currentBalance": "Cumulative balance",
+    "weeklyTitle": "Weekly totals (last {{count}} weeks)",
+    "weeklyChart": "Chart of weekly totals",
+    "noWeeks": "No weekly totals available.",
+    "hours": "hours"
+  }
+}

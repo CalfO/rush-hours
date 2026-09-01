@@ -1,13 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * PrimeReact v11 Primitive-layer design tokens (see .claude/skills/primereact
+ * §Theming): the components pulled into src/components/ui/ via the shadcn CLI
+ * are styled entirely through these CSS variables + the tailwindcss-primeui
+ * plugin (tailwind.config.js), not a PrimeReact CSS theme (spec §2.1
+ * explicitly forbids one). Values below map the --p-primary-* scale onto this
+ * app's own `primary` (Indigo) palette (tailwind.config.js) and the
+ * --p-surface-* scale onto the standard Tailwind `slate` scale (this repo's
+ * components.json baseColor), so PrimeReact-derived components render with
+ * the same palette as everything else instead of PrimeReact's neutral-gray
+ * default. This is the actual source of truth for anything driven by
+ * PrimeReact's own `--p-primary-color`/`--p-highlight-*` tokens (focus
+ * rings, selected/checked states, the calendar's selected day, the
+ * `tailwindcss-primeui` plugin's own `bg-primary-*` utilities) — it does
+ * NOT automatically follow `tailwind.config.js`'s `theme.extend.colors.primary`
+ * scale, so the two must be kept in sync by hand whenever either changes.
+ */
+:root {
+  --p-primary-50: #eef2ff;
+  --p-primary-100: #e0e7ff;
+  --p-primary-200: #c7d2fe;
+  --p-primary-300: #a5b4fc;
+  --p-primary-400: #818cf8;
+  --p-primary-500: #6366f1;
+  --p-primary-600: #4f46e5;
+  --p-primary-700: #4338ca;
+  --p-primary-800: #3730a3;
+  --p-primary-900: #312e81;
+  --p-primary-950: #1e1b4b;
+
+  --p-surface-0: #ffffff;
+  --p-surface-50: #f8fafc;
+  --p-surface-100: #f1f5f9;
+  --p-surface-200: #e2e8f0;
+  --p-surface-300: #cbd5e1;
+  --p-surface-400: #94a3b8;
+  --p-surface-500: #64748b;
+  --p-surface-600: #475569;
+  --p-surface-700: #334155;
+  --p-surface-800: #1e293b;
+  --p-surface-900: #0f172a;
+  --p-surface-950: #020617;
+
+  --p-content-border-radius: 0.375rem;
+  --p-primary-color: var(--p-primary-600);
+  --p-primary-contrast-color: var(--p-surface-0);
+  --p-primary-hover-color: var(--p-primary-700);
+  --p-primary-active-color: var(--p-primary-900);
+  --p-content-border-color: var(--p-surface-200);
+  --p-content-hover-background: var(--p-surface-100);
+  --p-content-hover-color: var(--p-surface-800);
+  --p-highlight-background: var(--p-primary-50);
+  --p-highlight-color: var(--p-primary-700);
+  --p-highlight-focus-background: var(--p-primary-100);
+  --p-highlight-focus-color: var(--p-primary-800);
+  --p-text-color: var(--p-surface-700);
+  --p-text-hover-color: var(--p-surface-800);
+  --p-text-muted-color: var(--p-surface-500);
+  --p-text-hover-muted-color: var(--p-surface-600);
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Roboto",
+    "Oxygen",
+    "Ubuntu",
+    "Cantarell",
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
 }

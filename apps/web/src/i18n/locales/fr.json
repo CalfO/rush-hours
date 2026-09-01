@@ -1,0 +1,131 @@
+{
+  "app": {
+    "title": "RushHours"
+  },
+  "nav": {
+    "entry": "Saisie",
+    "analytics": "Analyses"
+  },
+  "auth": {
+    "title": "Connexion",
+    "usernameLabel": "Nom d'utilisateur",
+    "usernamePlaceholder": "user ou admin",
+    "continue": "Continuer",
+    "offerRegisterMessage": "Aucun passkey n'est encore associé à ce compte.",
+    "offerRegisterButton": "Créer votre passkey pour ce compte",
+    "genericError": "Une erreur est survenue. Veuillez réessayer.",
+    "ceremonyError": "L'opération a été annulée ou a échoué. Veuillez réessayer."
+  },
+  "weekdays": {
+    "MONDAY": "Lundi",
+    "TUESDAY": "Mardi",
+    "WEDNESDAY": "Mercredi",
+    "THURSDAY": "Jeudi",
+    "FRIDAY": "Vendredi",
+    "SATURDAY": "Samedi",
+    "SUNDAY": "Dimanche"
+  },
+  "workSchedule": {
+    "title": "Ma semaine de travail",
+    "weeklyHoursLabel": "Heures contractuelles hebdomadaires",
+    "quickPickLabel": "Raccourcis",
+    "workingDaysLabel": "Jours travaillés",
+    "distributionLabel": "Répartition des heures par jour",
+    "weekStartDayLabel": "Jour de début de semaine",
+    "deltaMatch": "La répartition correspond au total hebdomadaire.",
+    "deltaMismatch": "Écart de {{minutes}} minute(s) avec le total hebdomadaire.",
+    "incompleteCheckedDay": "Indiquez un nombre d'heures pour chaque jour coché.",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "loading": "Chargement de votre semaine de travail…",
+    "loadError": "Impossible de charger votre semaine de travail. Veuillez réessayer.",
+    "saveError": "Impossible d'enregistrer votre semaine de travail. Veuillez réessayer."
+  },
+  "profile": {
+    "title": "Mon profil",
+    "firstNameLabel": "Prénom",
+    "lastNameLabel": "Nom",
+    "emailLabel": "E-mail",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "saveError": "Impossible d'enregistrer votre profil. Veuillez réessayer."
+  },
+  "onboarding": {
+    "continue": "Continuer",
+    "stepIndicator": "Étape {{current}} sur {{total}}"
+  },
+  "header": {
+    "myProfile": "Mon profil",
+    "myWorkSchedule": "Ma semaine de travail",
+    "deleteReferenceWeek": "Supprimer la semaine de référence",
+    "logout": "Déconnexion",
+    "languageLabel": "Langue"
+  },
+  "common": {
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "genericError": "Une erreur est survenue. Veuillez réessayer."
+  },
+  "referenceWeek": {
+    "saveTitle": "Enregistrer comme semaine de référence ?",
+    "saveDescription": "Vous venez de compléter cette semaine. Voulez-vous l'enregistrer comme semaine de référence pour préremplir vos prochaines saisies ?",
+    "saveDescriptionReplace": "Vous venez de compléter cette semaine. L'enregistrer comme semaine de référence remplacera celle déjà enregistrée. Continuer ?",
+    "saveConfirm": "Oui, enregistrer",
+    "saveDecline": "Non merci",
+    "useSwitchLabel": "Utiliser la semaine de référence pour toute la semaine",
+    "deleteConfirmTitle": "Supprimer la semaine de référence ?",
+    "deleteConfirmDescription": "Cette action supprimera définitivement votre semaine de référence enregistrée."
+  },
+  "timeEntry": {
+    "dateLabel": "Date",
+    "timePlaceholder": "hh:mm",
+    "hourGridLabel": "Choisir l'heure",
+    "arrivalTimeLabel": "Arrivée",
+    "departureTimeLabel": "Départ",
+    "lunchBreakStartLabel": "Début pause déjeuner",
+    "lunchBreakEndLabel": "Fin pause déjeuner",
+    "save": "Enregistrer",
+    "saveError": "Impossible d'enregistrer cette journée. Veuillez réessayer.",
+    "loading": "Chargement…",
+    "loadError": "Impossible de charger vos saisies. Veuillez réessayer.",
+    "dayIndicatorLabel": "Solde du jour",
+    "weekIndicatorLabel": "Solde de la semaine",
+    "monthTotalLabel": "Total du mois",
+    "previousMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "noWorkingDays": "Aucun jour travaillé n'est configuré. Renseignez votre semaine de travail depuis le menu utilisateur.",
+    "previousDay": "Jour précédent",
+    "nextDay": "Jour suivant",
+    "incrementLabel": "Augmenter",
+    "decrementLabel": "Diminuer",
+    "incrementHourLabel": "Augmenter l'heure",
+    "decrementHourLabel": "Diminuer l'heure",
+    "incrementMinuteLabel": "Augmenter les minutes",
+    "decrementMinuteLabel": "Diminuer les minutes"
+  },
+  "analytics": {
+    "title": "Analyses",
+    "range": "Période : {{from}} → {{to}}",
+    "periodLabel": "Période d'analyse",
+    "month": "Mois",
+    "week": "Semaine",
+    "custom": "Plage libre",
+    "referenceDate": "Date de référence",
+    "from": "Du",
+    "to": "Au",
+    "invalidRange": "La date de début doit être antérieure ou égale à la date de fin.",
+    "loading": "Chargement des analyses…",
+    "loadError": "Impossible de charger vos analyses. Veuillez réessayer.",
+    "empty": "Aucune saisie sur la période sélectionnée.",
+    "dailyTitle": "Heures travaillées par jour",
+    "dailyChart": "Graphique des heures travaillées par jour",
+    "balanceTitle": "Évolution du solde cumulé",
+    "balanceChart": "Graphique de l'évolution du solde cumulé",
+    "currentBalance": "Solde cumulé",
+    "weeklyTitle": "Totaux hebdomadaires ({{count}} dernières semaines)",
+    "weeklyChart": "Graphique des totaux hebdomadaires",
+    "noWeeks": "Aucun total hebdomadaire disponible.",
+    "hours": "heures"
+  }
+}
