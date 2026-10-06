@@ -7,9 +7,125 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Hello {
-  key   String @id
-  value String
+enum Role {
+  USER
+  ADMIN
+}
 
-  @@map("hello")
+enum Weekday {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum WebauthnChallengeType {
+  REGISTRATION
+  AUTHENTICATION
+}
+
+model User {
+  id                    String    @id @default(uuid())
+  username              String    @unique // "user" / "admin" — identifiant de connexion stable, distinct de l'email
+  email                 String?   @unique
+  firstName             String?
+  lastName              String?
+  role                  Role      @default(USER)
+  weeklyContractHours   Decimal   @default(35) @db.Decimal(5, 2)
+  weekStartDay          Weekday   @default(MONDAY) // jour par lequel commence la semaine de l'utilisateur
+  onboardingCompletedAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  credentials          Credential[]
+  timeEntries          TimeEntry[]
+  workingDaySchedules   WorkingDaySchedule[]
+  referenceWeekEntries  ReferenceWeekEntry[]
+  webauthnChallenges    WebauthnChallenge[]
+
+  @@map("users")
+}
+
+// Un enregistrement = un jour "travaillé" pour cet utilisateur + la part de weeklyContractHours
+// attendue ce jour-là. L'absence d'enregistrement pour un jour de la semaine = jour non travaillé.
+model WorkingDaySchedule {
+  id            String  @id @default(uuid())
+  weekday       Weekday
+  targetMinutes Int // heures attendues ce jour-là, exprimées en minutes
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekday])
+  @@map("working_day_schedules")
+}
+
+// Semaine de référence (spec `time-entry-ux-and-reference-week.md` §5) : un jeu d'heures type
+// par jour de semaine, indexé par `Weekday` (pas par `Date`) — une seule semaine de référence par
+// utilisateur, remplacée intégralement via `deleteMany` + `createMany` (même motif que
+// WorkingDaySchedule/replaceWorkSchedule), jamais mise à jour ligne par ligne.
+model ReferenceWeekEntry {
+  id                     String   @id @default(uuid())
+  weekday                Weekday
+  arrivalMinutes         Int // minute du jour (0-1439), heure murale locale — pas de fuseau
+  departureMinutes       Int
+  lunchBreakStartMinutes Int
+  lunchBreakEndMinutes   Int
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekday])
+  @@map("reference_week_entries")
+}
+
+model Credential {
+  id           String   @id @default(uuid()) // PK interne
+  credentialId String   @unique // base64url de l'ID renvoyé par WebAuthn
+  publicKey    Bytes
+  counter      BigInt   @default(0)
+  transports   String[] @default([])
+  deviceLabel  String?
+  createdAt    DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credentials")
+}
+
+model TimeEntry {
+  id              String   @id @default(uuid())
+  date            DateTime @db.Date // jour concerné, sans heure
+  arrivalTime     DateTime // horodatage complet (date + heure) du jour concerné
+  departureTime   DateTime
+  lunchBreakStart DateTime
+  lunchBreakEnd   DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("time_entries")
+}
+
+model WebauthnChallenge {
+  id        String                @id @default(uuid())
+  type      WebauthnChallengeType
+  challenge String
+  expiresAt DateTime
+  createdAt DateTime              @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@map("webauthn_challenges")
 }

@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
 
-describe('AppController', () => {
+describe("AppController", () => {
   let appController: AppController;
 
   beforeEach(async () => {
@@ -11,7 +11,7 @@ describe('AppController', () => {
       providers: [
         {
           provide: AppService,
-          useValue: { getHello: () => Promise.resolve('Hello World!') },
+          useValue: { getHealth: () => ({ status: "ok" }) },
         },
       ],
     }).compile();
@@ -19,9 +19,9 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', async () => {
-      expect(await appController.getHello()).toBe('Hello World!');
+  describe("root", () => {
+    it("should return the health status", () => {
+      expect(appController.getHealth()).toEqual({ status: "ok" });
     });
   });
 });
